@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	. "dan/base"
-	"encoding/json"
+	"dan/pimco/v1/model"
+	"github.com/mailru/easyjson"
+
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/valyala/fasthttp"
-	"log"
+	_ "log"
 	"time"
 )
 
@@ -14,22 +16,16 @@ const (
 	database = "test"
 )
 
-type Sample struct {
-	Tag    string
-	Values []float64
-	TS     int64 //timestamp in nanoseconds
-}
-
 var (
 	FIELD_NAMES = []string{"V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10"}
 	EMPTY_TAGS  = map[string]string{}
 )
 
-func makeHandler(ch chan Sample) fasthttp.RequestHandler {
+func makeHandler(ch chan model.Sample) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		//log.Printf("new request")
-		var sample Sample
-		err := json.Unmarshal(ctx.PostBody(), &sample)
+		var sample model.Sample
+		err := easyjson.Unmarshal(ctx.PostBody(), &sample)
 		if err != nil {
 			ctx.Error(err.Error(), fasthttp.StatusBadRequest)
 			return
@@ -44,7 +40,7 @@ func makeHandler(ch chan Sample) fasthttp.RequestHandler {
 	}
 }
 
-func addSample(sample *Sample, batch client.BatchPoints) {
+func addSample(sample *model.Sample, batch client.BatchPoints) {
 	fields := make(map[string]interface{})
 	for idx, fn := range FIELD_NAMES {
 		fields[fn] = sample.Values[idx]
@@ -53,7 +49,7 @@ func addSample(sample *Sample, batch client.BatchPoints) {
 	batch.AddPoint(point)
 }
 
-func saveLoop(ctx context.Context, ch chan Sample) {
+func saveLoop(ctx context.Context, ch chan model.Sample) {
 	conn, err := client.NewHTTPClient(client.HTTPConfig{Addr: "http://localhost:8086"})
 	Check(err)
 	defer conn.Close()
@@ -83,12 +79,17 @@ loop:
 			}
 		}
 		conn.Write(batch)
-		log.Printf("Written batch with %d records", len(batch.Points()))
+		//log.Printf("Written batch with %d records", len(batch.Points()))
 	}
 }
 
+// func saveLoop2(ctx context.Context, ch chan Sample) {
+// 	for _ = range ch {
+// 	}
+// }
+
 func main() {
-	ch := make(chan Sample, 1000)
+	ch := make(chan model.Sample, 1000)
 	ctx := context.Background()
 	go saveLoop(ctx, ch)
 	err := fasthttp.ListenAndServe("localhost:9876", makeHandler(ch))
