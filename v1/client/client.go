@@ -33,22 +33,33 @@ func init() {
 	}
 }
 
-func work(count, step int, ts int64, wg *sync.WaitGroup) {
-	var values [10]float64
-	var sample model.Sample
-	for i := 0; i < count; i++ {
-		sample.Tag = tags[rand.Intn(len(tags))]
-		v0 := float64(ts / 1000000000)
-		for t := range values {
-			values[t] = v0 * float64(t+1)
+func mkSample(ts int64) model.Sample {
+	values := make([]float64, 10)
+	v0 := float64(ts / 1000000000)
+	for t := range values {
+		values[t] = v0 * float64(t+1)
+	}
+	return model.Sample{
+		Tag:    tags[rand.Intn(len(tags))],
+		Values: values,
+		TS:     ts,
+	}
+}
+
+func work(count, bs int, ts, step int64, wg *sync.WaitGroup) {
+	samples := make([]model.Sample, bs)
+	for i := 0; i < count/bs; i++ {
+		samples = samples[:0]
+		for j := 0; j < bs; j++ {
+			s := mkSample(ts)
+			samples = append(samples, s)
+			ts += step
 		}
-		sample.Values = values[0:10]
-		sample.TS = ts
 		req := fasthttp.AcquireRequest()
 		resp := fasthttp.AcquireResponse()
 		req.Header.SetMethod("POST")
 		req.SetRequestURI(url)
-		body, err := easyjson.Marshal(sample)
+		body, err := easyjson.Marshal(model.Samples(samples))
 		Check(err)
 		req.SetBody(body)
 		Check(fasthttp.Do(req, resp))
@@ -57,7 +68,6 @@ func work(count, step int, ts int64, wg *sync.WaitGroup) {
 		}
 		fasthttp.ReleaseRequest(req)
 		fasthttp.ReleaseResponse(resp)
-		ts += int64(step * 1000000)
 	}
 	wg.Done()
 }
@@ -67,6 +77,7 @@ func main() {
 	startTime := flag.String("start", "2017-04-08 09:00:00", "Start date")
 	step := flag.Int("step", 300, "Step, ms")
 	count := flag.Int("count", 1, "count")
+	bs := flag.Int("bs", 1, "batch size")
 	concurrency := flag.Int("c", 1, "concurrency")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to <file>")
 	memprofile := flag.String("memprofile", "", "write memory profile to <file>")
@@ -82,7 +93,7 @@ func main() {
 	ts := dt.UnixNano()
 	wg.Add(*concurrency)
 	for i := 0; i < *concurrency; i++ {
-		go work(*count/(*concurrency), *step, ts+int64(i*2), &wg)
+		go work(*count/(*concurrency), *bs, int64(*step*1000000), ts+int64(i*2), &wg)
 	}
 	wg.Wait()
 	if *memprofile != "" {

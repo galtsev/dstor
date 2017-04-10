@@ -17,7 +17,73 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjsonC80ae7adDecodeDanPimcoV1Model(in *jlexer.Lexer, out *Sample) {
+func easyjsonC80ae7adDecodeDanPimcoV1Model(in *jlexer.Lexer, out *Samples) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		in.Skip()
+		*out = nil
+	} else {
+		in.Delim('[')
+		if *out == nil {
+			if !in.IsDelim(']') {
+				*out = make(Samples, 0, 1)
+			} else {
+				*out = Samples{}
+			}
+		} else {
+			*out = (*out)[:0]
+		}
+		for !in.IsDelim(']') {
+			var v1 Sample
+			(v1).UnmarshalEasyJSON(in)
+			*out = append(*out, v1)
+			in.WantComma()
+		}
+		in.Delim(']')
+	}
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonC80ae7adEncodeDanPimcoV1Model(out *jwriter.Writer, in Samples) {
+	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v2, v3 := range in {
+			if v2 > 0 {
+				out.RawByte(',')
+			}
+			(v3).MarshalEasyJSON(out)
+		}
+		out.RawByte(']')
+	}
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v Samples) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonC80ae7adEncodeDanPimcoV1Model(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v Samples) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonC80ae7adEncodeDanPimcoV1Model(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *Samples) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonC80ae7adDecodeDanPimcoV1Model(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *Samples) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonC80ae7adDecodeDanPimcoV1Model(l, v)
+}
+func easyjsonC80ae7adDecodeDanPimcoV1Model1(in *jlexer.Lexer, out *Sample) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -54,9 +120,9 @@ func easyjsonC80ae7adDecodeDanPimcoV1Model(in *jlexer.Lexer, out *Sample) {
 					out.Values = (out.Values)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v1 float64
-					v1 = float64(in.Float64())
-					out.Values = append(out.Values, v1)
+					var v4 float64
+					v4 = float64(in.Float64())
+					out.Values = append(out.Values, v4)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -73,7 +139,7 @@ func easyjsonC80ae7adDecodeDanPimcoV1Model(in *jlexer.Lexer, out *Sample) {
 		in.Consumed()
 	}
 }
-func easyjsonC80ae7adEncodeDanPimcoV1Model(out *jwriter.Writer, in Sample) {
+func easyjsonC80ae7adEncodeDanPimcoV1Model1(out *jwriter.Writer, in Sample) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -92,11 +158,11 @@ func easyjsonC80ae7adEncodeDanPimcoV1Model(out *jwriter.Writer, in Sample) {
 		out.RawString("null")
 	} else {
 		out.RawByte('[')
-		for v2, v3 := range in.Values {
-			if v2 > 0 {
+		for v5, v6 := range in.Values {
+			if v5 > 0 {
 				out.RawByte(',')
 			}
-			out.Float64(float64(v3))
+			out.Float64(float64(v6))
 		}
 		out.RawByte(']')
 	}
@@ -112,23 +178,23 @@ func easyjsonC80ae7adEncodeDanPimcoV1Model(out *jwriter.Writer, in Sample) {
 // MarshalJSON supports json.Marshaler interface
 func (v Sample) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC80ae7adEncodeDanPimcoV1Model(&w, v)
+	easyjsonC80ae7adEncodeDanPimcoV1Model1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Sample) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC80ae7adEncodeDanPimcoV1Model(w, v)
+	easyjsonC80ae7adEncodeDanPimcoV1Model1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Sample) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC80ae7adDecodeDanPimcoV1Model(&r, v)
+	easyjsonC80ae7adDecodeDanPimcoV1Model1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Sample) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC80ae7adDecodeDanPimcoV1Model(l, v)
+	easyjsonC80ae7adDecodeDanPimcoV1Model1(l, v)
 }

@@ -24,18 +24,16 @@ var (
 func makeHandler(ch chan model.Sample) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		//log.Printf("new request")
-		var sample model.Sample
-		err := easyjson.Unmarshal(ctx.PostBody(), &sample)
+		var samples model.Samples
+		err := easyjson.Unmarshal(ctx.PostBody(), &samples)
 		if err != nil {
 			ctx.Error(err.Error(), fasthttp.StatusBadRequest)
 			return
 		}
-		if len(sample.Values) < len(FIELD_NAMES) {
-			ctx.Error("Expected 10 values", fasthttp.StatusBadRequest)
-			return
-		}
 		//log.Printf("Queued: tag: %s, values: %v", sample.Tag, sample.Values)
-		ch <- sample
+		for _, sample := range samples {
+			ch <- sample
+		}
 		ctx.SetStatusCode(fasthttp.StatusNoContent)
 	}
 }
@@ -78,15 +76,15 @@ loop:
 				more = false
 			}
 		}
-		conn.Write(batch)
+		//conn.Write(batch)
 		//log.Printf("Written batch with %d records", len(batch.Points()))
 	}
 }
 
-// func saveLoop2(ctx context.Context, ch chan Sample) {
-// 	for _ = range ch {
-// 	}
-// }
+func saveLoop2(ctx context.Context, ch chan model.Sample) {
+	for _ = range ch {
+	}
+}
 
 func main() {
 	ch := make(chan model.Sample, 1000)

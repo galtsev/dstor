@@ -7,3 +7,6 @@ type Sample struct {
 	Values []float64
 	TS     int64 //timestamp in nanoseconds
 }
+
+//easyjson:json
+type Samples []Sample
