@@ -1,21 +1,31 @@
-package main
+package kafka
 
 import (
 	"context"
-	. "dan/base"
-	"dan/pimco/v1/model"
+	"dan/pimco/model"
+	. "dan/pimco/util"
+	"flag"
+	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/mailru/easyjson"
 	"github.com/valyala/fasthttp"
 	"log"
 	"os"
-	_ "time"
+	"strings"
 )
 
 var (
 	FIELD_NAMES = []string{"V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10"}
 	EMPTY_TAGS  = map[string]string{}
 )
+
+type Config struct {
+	Kafka struct {
+		Hosts []string
+		Topic string
+	}
+	Addr string
+}
 
 func makeHandler(ch chan model.Sample) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
@@ -34,11 +44,9 @@ func makeHandler(ch chan model.Sample) fasthttp.RequestHandler {
 	}
 }
 
-func saveLoop(ctx context.Context, ch chan model.Sample) {
+func saveLoop(ctx context.Context, ch chan model.Sample, cfg Config) {
 	conf := sarama.NewConfig()
-	kafkaHost := os.Getenv("KAFKA_HOST")
-	kafkaTopic := os.Getenv("KAFKA_TOPIC")
-	producer, err := sarama.NewAsyncProducer([]string{kafkaHost}, conf)
+	producer, err := sarama.NewAsyncProducer(cfg.Kafka.Hosts, conf)
 	Check(err)
 	log.Println("Producer started")
 	for {
@@ -47,12 +55,11 @@ func saveLoop(ctx context.Context, ch chan model.Sample) {
 			log.Println(err.Error())
 
 		case <-producer.Successes():
-			log.Println("ok")
 		case sample := <-ch:
 			body, err := easyjson.Marshal(sample)
 			Check(err)
 			msg := sarama.ProducerMessage{
-				Topic: kafkaTopic,
+				Topic: cfg.Kafka.Topic,
 				Key:   sarama.StringEncoder(sample.Tag),
 				Value: sarama.ByteEncoder(body),
 			}
@@ -63,15 +70,21 @@ func saveLoop(ctx context.Context, ch chan model.Sample) {
 	}
 }
 
-func saveLoop2(ctx context.Context, ch chan model.Sample) {
-	for _ = range ch {
+func Run(args []string) {
+	var cfg Config
+	fs := flag.NewFlagSet("kafka", flag.ContinueOnError)
+	fs.StringVar(&cfg.Kafka.Topic, "topic", "test", "Kafka topic")
+	hosts := fs.String("hosts", "192.168.0.2:9092", "Comma-separated list of Kafka hosts")
+	fs.StringVar(&cfg.Addr, "addr", "localhost:9876", "Serve address:port")
+	err := fs.Parse(args)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(2)
 	}
-}
-
-func main() {
+	cfg.Kafka.Hosts = strings.Split(*hosts, ",")
 	ch := make(chan model.Sample, 1000)
 	ctx := context.Background()
-	go saveLoop(ctx, ch)
-	err := fasthttp.ListenAndServe("localhost:9876", makeHandler(ch))
+	go saveLoop(ctx, ch, cfg)
+	err = fasthttp.ListenAndServe(cfg.Addr, makeHandler(ch))
 	Check(err)
 }

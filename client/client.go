@@ -1,7 +1,7 @@
-package main
+package client
 
 import (
-	. "dan/base"
+	. "dan/pimco/util"
 	"dan/pimco/v1/model"
 	"errors"
 	"flag"
@@ -72,16 +72,21 @@ func work(count, bs int, ts, step int64, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func main() {
+func Run(args []string) {
 	var wg sync.WaitGroup
-	startTime := flag.String("start", "2017-04-08 09:00:00", "Start date")
-	step := flag.Int("step", 300, "Step, ms")
-	count := flag.Int("count", 1, "count")
-	bs := flag.Int("bs", 1, "batch size")
-	concurrency := flag.Int("c", 1, "concurrency")
-	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to <file>")
-	memprofile := flag.String("memprofile", "", "write memory profile to <file>")
-	flag.Parse()
+	fs := flag.NewFlagSet("client", flag.ContinueOnError)
+	startTime := fs.String("start", "2017-04-08 09:00:00", "Start date")
+	step := fs.Int("step", 300, "Step, ms")
+	count := fs.Int("count", 1, "count")
+	bs := fs.Int("bs", 1, "batch size")
+	concurrency := fs.Int("c", 1, "concurrency")
+	cpuprofile := fs.String("cpuprofile", "", "write cpu profile to <file>")
+	memprofile := fs.String("memprofile", "", "write memory profile to <file>")
+	err := fs.Parse(args)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(2)
+	}
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		Check(err)
