@@ -1,8 +1,8 @@
 package client
 
 import (
+	"dan/pimco/model"
 	. "dan/pimco/util"
-	"dan/pimco/v1/model"
 	"errors"
 	"flag"
 	"fmt"
@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	numTags = 2
+	numTags = 20
 	// Mon Jan 2 15:04:05 -0700 MST 2006
 	date_format = "2006-01-02 15:04:05"
 	url         = "http://localhost:9876"

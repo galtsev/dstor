@@ -2,9 +2,11 @@ package main
 
 import (
 	"dan/pimco/client"
+	"dan/pimco/receptor/batch"
 	"dan/pimco/receptor/direct"
 	"dan/pimco/receptor/kafka"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -14,6 +16,7 @@ commands: client, recept-direct, recept-kafka`, os.Args[0])
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	if len(os.Args) < 2 {
 		Usage()
 		return
@@ -27,6 +30,8 @@ func main() {
 		direct.Run(args)
 	case "recept-kafka":
 		kafka.Run(args)
+	case "recept-batch":
+		batch.Run(args)
 	default:
 		Usage()
 	}
