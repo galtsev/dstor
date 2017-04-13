@@ -12,16 +12,10 @@ import (
 	"github.com/valyala/fasthttp"
 	_ "log"
 	"os"
-	"time"
 )
 
 const (
 	database = "test"
-)
-
-var (
-	FIELD_NAMES = []string{"V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10"}
-	EMPTY_TAGS  = map[string]string{}
 )
 
 type Config struct {
@@ -47,15 +41,6 @@ func makeHandler(ch chan model.Sample) fasthttp.RequestHandler {
 	}
 }
 
-func addSample(sample *model.Sample, batch client.BatchPoints) {
-	fields := make(map[string]interface{})
-	for idx, fn := range FIELD_NAMES {
-		fields[fn] = sample.Values[idx]
-	}
-	point, _ := client.NewPoint(sample.Tag, EMPTY_TAGS, fields, time.Unix(0, sample.TS))
-	batch.AddPoint(point)
-}
-
 func saveLoop(ctx context.Context, ch chan model.Sample, cfg Config) {
 	conn, err := client.NewHTTPClient(client.HTTPConfig{Addr: cfg.InfluxURL})
 	Check(err)
@@ -70,7 +55,7 @@ loop:
 		// collect at least one sample from cannel + as much as we can without blocking
 		select {
 		case sample := <-ch:
-			addSample(&sample, batch)
+			AddSample(&sample, batch)
 		case <-ctx.Done():
 			break loop
 		}
@@ -79,7 +64,7 @@ loop:
 		for more && cnt < 1000 {
 			select {
 			case sample := <-ch:
-				addSample(&sample, batch)
+				AddSample(&sample, batch)
 				cnt++
 			default:
 				more = false

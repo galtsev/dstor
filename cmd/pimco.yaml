@@ -1,0 +1,8 @@
+influx:
+  url: http://localhost:8086
+  database: test
+  measurement: ms
+  batch_size: 1000
+  flush_delay: 50
+count: 10000
+tags: 20
