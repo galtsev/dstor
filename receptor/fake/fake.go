@@ -2,8 +2,8 @@ package fake
 
 import (
 	"context"
+	. "dan/pimco/base"
 	"dan/pimco/model"
-	. "dan/pimco/util"
 	"github.com/mailru/easyjson"
 
 	"github.com/valyala/fasthttp"

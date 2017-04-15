@@ -2,8 +2,8 @@ package kafka
 
 import (
 	"context"
+	. "dan/pimco/base"
 	"dan/pimco/model"
-	. "dan/pimco/util"
 	"flag"
 	"fmt"
 	"github.com/Shopify/sarama"

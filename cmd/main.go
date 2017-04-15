@@ -7,16 +7,35 @@ import (
 	"dan/pimco/receptor/direct"
 	"dan/pimco/receptor/kafka"
 	"dan/pimco/temp"
-	"dan/pimco/temp/gen1"
-	"dan/pimco/temp/gen2"
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 func Usage() {
 	fmt.Printf(`Usage: %s <cmd> <options>
-commands: client, recept-direct, recept-kafka`, os.Args[0])
+commands: 
+	client - test http client, 
+	recept-direct - http server that write samples directly to influxdb,
+	recept-kafka - http server that write samples to kafka using async producer (one sample per kafka message)
+	recept-batch - http server that write samples to kafka (many samples per kafka message)
+	loader - pump messages from kafka to influxdb
+	show-config - dump current config to stdout
+
+	# experimenting
+	gen1 - ?
+	gen2flus - generate samples and write directly to influxdb
+	gen2kafka - generate samples and write to kafka
+	kafka2flux - read from kafka, write to influxdb
+	topic-stats - read kafka topic, show some stats
+`, os.Args[0])
+}
+
+func timeIt(fn func()) {
+	start := time.Now()
+	fn()
+	fmt.Printf("Duration: %v\n", time.Since(start))
 }
 
 func main() {
@@ -40,13 +59,27 @@ func main() {
 		loader.Run(args)
 	// temporary
 	case "gen1":
-		temp.TimeIt(func() {
-			gen1.Run(args)
+		timeIt(func() {
+			temp.Run1(args)
 		})
-	case "gen2":
-		temp.TimeIt(func() {
-			gen2.Run(args)
+	case "gen2flux":
+		timeIt(func() {
+			temp.Run2(args)
 		})
+	// consume topic from kafka, write to influx
+	case "kafka2flux":
+		timeIt(func() {
+			temp.PumpKafka2Influx(args)
+		})
+	// generate messages and write to kafka
+	case "gen2kafka":
+		timeIt(func() {
+			temp.Run4(args)
+		})
+	case "topic-stats":
+		temp.TopicStats(args)
+	case "show-config":
+		temp.ShowConfig(args)
 	default:
 		Usage()
 	}

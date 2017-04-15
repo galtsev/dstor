@@ -1,23 +1,15 @@
-package gen1
+package temp
 
 import (
-	"dan/pimco/temp"
-	. "dan/pimco/util"
+	"dan/pimco"
+	. "dan/pimco/base"
 	"fmt"
 	"github.com/influxdata/influxdb/client/v2"
 	"time"
 )
 
-const (
-	start = "2017-04-06 10:00"
-	step  = 400 //ms
-	// Mon Jan 2 15:04:05 -0700 MST 2006
-	date_format         = "2006-01-02 15:04"
-	daySeconds  float64 = 86400
-)
-
-func Run(args []string) {
-	cfg := temp.LoadConfig(args...)
+func Run1(args []string) {
+	cfg := pimco.LoadConfig(args...)
 	fmt.Println(cfg)
 	fieldSet := []struct {
 		key   string

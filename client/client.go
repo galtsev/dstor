@@ -1,8 +1,8 @@
 package client
 
 import (
+	. "dan/pimco/base"
 	"dan/pimco/model"
-	. "dan/pimco/util"
 	"errors"
 	"flag"
 	"fmt"
