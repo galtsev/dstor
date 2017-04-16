@@ -14,12 +14,12 @@ import (
 func Run4(args []string) {
 	cfg := pimco.LoadConfig(args...)
 	fmt.Println(cfg)
-	kafkaWriter := kafka.NewWriter(cfg.Kafka.Hosts, cfg.Kafka.Topic, int32(0))
+	kafkaWriter := kafka.NewWriter(cfg.Kafka, int32(0))
 	w := pimco.NewWriter(kafkaWriter, cfg.Kafka.BatchSize, time.Duration(cfg.Kafka.FlushDelay)*time.Millisecond)
-	dt, err := time.Parse(date_format, start)
+	dt, err := time.Parse(date_format, cfg.Gen.Start)
 	Check(err)
-	gen := pimco.NewGenerator(cfg.Tags, dt.UnixNano(), step*1000000)
-	for i := 0; i < cfg.Count; i++ {
+	gen := pimco.NewGenerator(cfg.Gen.Tags, dt.UnixNano(), cfg.Gen.Step)
+	for i := 0; i < cfg.Gen.Count; i++ {
 		w.Write(gen.Next())
 	}
 	w.Close()

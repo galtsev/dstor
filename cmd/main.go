@@ -21,6 +21,10 @@ commands:
 	recept-kafka - http server that write samples to kafka using async producer (one sample per kafka message)
 	recept-batch - http server that write samples to kafka (many samples per kafka message)
 	loader - pump messages from kafka to influxdb
+
+	# Reporting servers
+	reporting-server-mem - reporting server with embedded loader. Read Kafka continuously, keep all samples in memory.
+
 	show-config - dump current config to stdout
 
 	# experimenting
@@ -57,11 +61,9 @@ func main() {
 		batch.Run(args)
 	case "loader":
 		loader.Run(args)
+	case "reporting-server-mem":
+		temp.MemServer(args)
 	// temporary
-	case "gen1":
-		timeIt(func() {
-			temp.Run1(args)
-		})
 	case "gen2flux":
 		timeIt(func() {
 			temp.Run2(args)

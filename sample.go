@@ -31,10 +31,10 @@ func (g *Generator) Next() *model.Sample {
 	return &sample
 }
 
-func NewGenerator(tags int, ts, step int64) *Generator {
+func NewGenerator(tags int, ts int64, step int) *Generator {
 	g := Generator{
 		ts:   ts,
-		step: step,
+		step: int64(step * 1000000),
 	}
 	for i := 0; i < tags; i++ {
 		g.tags = append(g.tags, fmt.Sprintf("tag%d", i))

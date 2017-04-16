@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjsonC80ae7adDecodeDanPimcoV1Model(in *jlexer.Lexer, out *Samples) {
+func easyjsonC80ae7adDecodeDanPimcoModel(in *jlexer.Lexer, out *Samples) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		in.Skip()
@@ -45,7 +45,7 @@ func easyjsonC80ae7adDecodeDanPimcoV1Model(in *jlexer.Lexer, out *Samples) {
 		in.Consumed()
 	}
 }
-func easyjsonC80ae7adEncodeDanPimcoV1Model(out *jwriter.Writer, in Samples) {
+func easyjsonC80ae7adEncodeDanPimcoModel(out *jwriter.Writer, in Samples) {
 	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 		out.RawString("null")
 	} else {
@@ -63,27 +63,27 @@ func easyjsonC80ae7adEncodeDanPimcoV1Model(out *jwriter.Writer, in Samples) {
 // MarshalJSON supports json.Marshaler interface
 func (v Samples) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC80ae7adEncodeDanPimcoV1Model(&w, v)
+	easyjsonC80ae7adEncodeDanPimcoModel(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Samples) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC80ae7adEncodeDanPimcoV1Model(w, v)
+	easyjsonC80ae7adEncodeDanPimcoModel(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Samples) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC80ae7adDecodeDanPimcoV1Model(&r, v)
+	easyjsonC80ae7adDecodeDanPimcoModel(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Samples) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC80ae7adDecodeDanPimcoV1Model(l, v)
+	easyjsonC80ae7adDecodeDanPimcoModel(l, v)
 }
-func easyjsonC80ae7adDecodeDanPimcoV1Model1(in *jlexer.Lexer, out *Sample) {
+func easyjsonC80ae7adDecodeDanPimcoModel1(in *jlexer.Lexer, out *Sample) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -139,7 +139,7 @@ func easyjsonC80ae7adDecodeDanPimcoV1Model1(in *jlexer.Lexer, out *Sample) {
 		in.Consumed()
 	}
 }
-func easyjsonC80ae7adEncodeDanPimcoV1Model1(out *jwriter.Writer, in Sample) {
+func easyjsonC80ae7adEncodeDanPimcoModel1(out *jwriter.Writer, in Sample) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -178,23 +178,23 @@ func easyjsonC80ae7adEncodeDanPimcoV1Model1(out *jwriter.Writer, in Sample) {
 // MarshalJSON supports json.Marshaler interface
 func (v Sample) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC80ae7adEncodeDanPimcoV1Model1(&w, v)
+	easyjsonC80ae7adEncodeDanPimcoModel1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Sample) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC80ae7adEncodeDanPimcoV1Model1(w, v)
+	easyjsonC80ae7adEncodeDanPimcoModel1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Sample) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC80ae7adDecodeDanPimcoV1Model1(&r, v)
+	easyjsonC80ae7adDecodeDanPimcoModel1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Sample) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC80ae7adDecodeDanPimcoV1Model1(l, v)
+	easyjsonC80ae7adDecodeDanPimcoModel1(l, v)
 }

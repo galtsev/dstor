@@ -1,4 +1,5 @@
 //go:generate easyjson $GOFILE
+//go:generate msgp
 package model
 
 //easyjson:json

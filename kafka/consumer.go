@@ -4,8 +4,8 @@ import (
 	"dan/pimco"
 	. "dan/pimco/base"
 	"dan/pimco/model"
+	"dan/pimco/serializer"
 	"github.com/Shopify/sarama"
-	"github.com/mailru/easyjson"
 )
 
 func ConsumePartition(cfg pimco.KafkaConfig, partition int32, oneShot bool) chan model.Sample {
@@ -25,13 +25,13 @@ func ConsumePartition(cfg pimco.KafkaConfig, partition int32, oneShot bool) chan
 	Check(err)
 	partitionConsumer, err := consumer.ConsumePartition(cfg.Topic, partition, 0)
 	Check(err)
+	szr := serializer.NewSerializer(cfg.Serializer)
 	go func() {
 		defer consumer.Close()
 		defer partitionConsumer.Close()
 		for msg := range partitionConsumer.Messages() {
 			var samples model.Samples
-			err := easyjson.Unmarshal(msg.Value, &samples)
-			Check(err)
+			szr.Unmarshal(msg.Value, &samples)
 			for _, sample := range samples {
 				ch <- sample
 			}

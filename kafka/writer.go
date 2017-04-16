@@ -1,10 +1,11 @@
 package kafka
 
 import (
+	"dan/pimco"
 	. "dan/pimco/base"
 	"dan/pimco/model"
+	"dan/pimco/serializer"
 	"github.com/Shopify/sarama"
-	"github.com/mailru/easyjson"
 )
 
 type Writer struct {
@@ -12,17 +13,19 @@ type Writer struct {
 	producer  sarama.SyncProducer
 	topic     string
 	partition int32
+	szr       serializer.Serializer
 }
 
-func NewWriter(hosts []string, topic string, partition int32) *Writer {
+func NewWriter(cfg pimco.KafkaConfig, partition int32) *Writer {
 	w := Writer{
-		topic:     topic,
+		topic:     cfg.Topic,
 		partition: partition,
+		szr:       serializer.NewSerializer(cfg.Serializer),
 	}
 	conf := sarama.NewConfig()
 	conf.Producer.Partitioner = sarama.NewManualPartitioner
 	conf.Producer.Return.Successes = true
-	producer, err := sarama.NewSyncProducer(hosts, conf)
+	producer, err := sarama.NewSyncProducer(cfg.Hosts, conf)
 	Check(err)
 	w.producer = producer
 	return &w
@@ -34,14 +37,13 @@ func (w *Writer) Add(sample *model.Sample) {
 
 func (w *Writer) Flush() {
 	if len(w.batch) > 0 {
-		body, err := easyjson.Marshal(model.Samples(w.batch))
-		Check(err)
+		body := w.szr.Marshal(model.Samples(w.batch))
 		msg := sarama.ProducerMessage{
 			Topic:     w.topic,
 			Value:     sarama.ByteEncoder(body),
 			Partition: w.partition,
 		}
-		_, _, err = w.producer.SendMessage(&msg)
+		_, _, err := w.producer.SendMessage(&msg)
 		Check(err)
 		w.batch = w.batch[:0]
 	}

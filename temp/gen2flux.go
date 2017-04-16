@@ -13,10 +13,10 @@ func Run2(args []string) {
 	fmt.Println(cfg)
 	fluxWriter := influx.NewWriter(cfg.Influx)
 	w := pimco.NewWriter(fluxWriter, cfg.Influx.BatchSize, time.Duration(cfg.Influx.FlushDelay)*time.Millisecond)
-	dt, err := time.Parse(date_format, start)
+	dt, err := time.Parse(date_format, cfg.Gen.Start)
 	Check(err)
-	gen := pimco.NewGenerator(cfg.Tags, dt.UnixNano(), step*1000000)
-	for i := 0; i < cfg.Count; i++ {
+	gen := pimco.NewGenerator(cfg.Gen.Tags, dt.UnixNano(), cfg.Gen.Step)
+	for i := 0; i < cfg.Gen.Count; i++ {
 		w.Write(gen.Next())
 	}
 	w.Close()
