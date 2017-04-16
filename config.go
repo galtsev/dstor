@@ -40,6 +40,9 @@ type Config struct {
 	HTTPServer struct {
 		Addr string
 	}
+	Client struct {
+		BatchSize int `yaml:"batch_size"`
+	}
 }
 
 func (cfg Config) String() string {
@@ -78,6 +81,7 @@ func NewConfig() *Config {
 		OneShot: false,
 	}
 	cfg.HTTPServer.Addr = "localhost:8787"
+	cfg.Client.BatchSize = 10
 
 	return &cfg
 }

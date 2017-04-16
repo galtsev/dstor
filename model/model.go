@@ -4,7 +4,8 @@ package model
 
 //easyjson:json
 type Sample struct {
-	Tag    string
+	Tag string
+	// TODO convert to array
 	Values []float64
 	TS     int64 //timestamp in nanoseconds
 }

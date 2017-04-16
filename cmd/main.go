@@ -1,8 +1,7 @@
 package main
 
 import (
-	"dan/pimco/client"
-	"dan/pimco/loader"
+	_ "dan/pimco/client"
 	"dan/pimco/receptor/batch"
 	"dan/pimco/receptor/direct"
 	"dan/pimco/receptor/kafka"
@@ -52,18 +51,20 @@ func main() {
 	args := os.Args[2:]
 	switch cmd {
 	case "client":
-		client.Run(args)
+		//client.Run(args)
+		timeIt(func() {
+			temp.Client(args)
+		})
 	case "recept-direct":
 		direct.Run(args)
 	case "recept-kafka":
 		kafka.Run(args)
 	case "recept-batch":
 		batch.Run(args)
-	case "loader":
-		loader.Run(args)
+
+	// temporary
 	case "reporting-server-mem":
 		temp.MemServer(args)
-	// temporary
 	case "gen2flux":
 		timeIt(func() {
 			temp.Run2(args)
