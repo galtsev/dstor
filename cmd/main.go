@@ -13,11 +13,13 @@ func Usage() {
 commands: 
 	client - test http client, 
 	reporting-server-mem - reporting server with embedded loader. Read Kafka continuously, keep all samples in memory.
+	reporting-server-influx - serve reports from influxdb
 	show-config - dump current config to stdout
 	gen2flux - generate samples and write directly to influxdb
 	gen2kafka - generate samples and write to kafka
 	kafka2flux - read from kafka, write to influxdb
 	topic-stats - read kafka topic, show some stats
+	query-flux - get report data directly from influxdb
 `, os.Args[0])
 }
 
@@ -48,6 +50,8 @@ func main() {
 		command.Recept2Kafka(args)
 	case "reporting-server-mem":
 		command.MemServer(args)
+	case "reporting-server-influx":
+		command.FluxServer(args)
 	case "gen2flux":
 		timeIt(func() {
 			command.Run2(args)
