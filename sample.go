@@ -2,21 +2,25 @@ package pimco
 
 import (
 	"dan/pimco/model"
+	"errors"
 	"fmt"
 	"math/rand"
 )
 
-func MakeSample(ts int64, tag string) model.Sample {
+func MakeSample(ts int64, tag string) *model.Sample {
 	values := make([]float64, 10)
 	v0 := float64(ts / 1000000000)
 	for t := range values {
 		values[t] = v0 * float64(t+1)
 	}
-	return model.Sample{
-		Tag:    tag,
-		Values: values,
-		TS:     ts,
+	sample := model.Sample{
+		Tag: tag,
+		TS:  ts,
 	}
+	for i := range sample.Values {
+		sample.Values[i] = v0 * float64(i+1)
+	}
+	return &sample
 }
 
 type Generator struct {
@@ -28,21 +32,22 @@ type Generator struct {
 
 func (g *Generator) Next() bool {
 	g.ts += g.step
-	return g.ts <= g.end_ts
+	return g.ts < g.end_ts
 }
 
 func (g *Generator) Sample() *model.Sample {
-	sample := MakeSample(g.ts, g.tags[rand.Intn(len(g.tags))])
-	g.ts += g.step
-	return &sample
+	return MakeSample(g.ts, g.tags[rand.Intn(len(g.tags))])
 }
 
 func NewGenerator(cfg GenConfig) *Generator {
 	ss, ee := cfg.Period()
 	ts, end_ts := ss.UnixNano(), ee.UnixNano()
+	if end_ts <= ts {
+		panic(errors.New("wrong generation period"))
+	}
 	step := (end_ts - ts) / int64(cfg.Count)
 	g := Generator{
-		ts:     ts - 1,
+		ts:     ts - step,
 		end_ts: end_ts,
 		step:   step,
 	}

@@ -19,8 +19,9 @@ kafka:
   serializer: msgp
 
 gen:
-  start: "2017-04-06 10:00"
-  step: 400
+  start: "2017-04-07 00:00"
+  end: "2017-04-08 00:00"
+  count: 1000000
 
 httpserver:
   addr: "localhost:8787"

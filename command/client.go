@@ -21,6 +21,9 @@ func (w *clientWriter) Add(sample *model.Sample) {
 }
 
 func (w *clientWriter) Flush() {
+	if len(w.batch) == 0 {
+		return
+	}
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
 	req.Header.SetMethod("POST")
@@ -33,6 +36,7 @@ func (w *clientWriter) Flush() {
 	}
 	fasthttp.ReleaseRequest(req)
 	fasthttp.ReleaseResponse(resp)
+	w.batch = w.batch[:0]
 }
 
 func (w *clientWriter) Close() {

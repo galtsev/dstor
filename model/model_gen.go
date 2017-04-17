@@ -35,10 +35,9 @@ func (z *Sample) DecodeMsg(dc *msgp.Reader) (err error) {
 			if err != nil {
 				return
 			}
-			if cap(z.Values) >= int(zbai) {
-				z.Values = (z.Values)[:zbai]
-			} else {
-				z.Values = make([]float64, zbai)
+			if zbai != 10 {
+				err = msgp.ArrayError{Wanted: 10, Got: zbai}
+				return
 			}
 			for zxvk := range z.Values {
 				z.Values[zxvk], err = dc.ReadFloat64()
@@ -78,7 +77,7 @@ func (z *Sample) EncodeMsg(en *msgp.Writer) (err error) {
 	if err != nil {
 		return err
 	}
-	err = en.WriteArrayHeader(uint32(len(z.Values)))
+	err = en.WriteArrayHeader(10)
 	if err != nil {
 		return
 	}
@@ -109,7 +108,7 @@ func (z *Sample) MarshalMsg(b []byte) (o []byte, err error) {
 	o = msgp.AppendString(o, z.Tag)
 	// string "Values"
 	o = append(o, 0xa6, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x73)
-	o = msgp.AppendArrayHeader(o, uint32(len(z.Values)))
+	o = msgp.AppendArrayHeader(o, 10)
 	for zxvk := range z.Values {
 		o = msgp.AppendFloat64(o, z.Values[zxvk])
 	}
@@ -146,10 +145,9 @@ func (z *Sample) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			if err != nil {
 				return
 			}
-			if cap(z.Values) >= int(zajw) {
-				z.Values = (z.Values)[:zajw]
-			} else {
-				z.Values = make([]float64, zajw)
+			if zajw != 10 {
+				err = msgp.ArrayError{Wanted: 10, Got: zajw}
+				return
 			}
 			for zxvk := range z.Values {
 				z.Values[zxvk], bts, err = msgp.ReadFloat64Bytes(bts)
@@ -175,7 +173,7 @@ func (z *Sample) UnmarshalMsg(bts []byte) (o []byte, err error) {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *Sample) Msgsize() (s int) {
-	s = 1 + 4 + msgp.StringPrefixSize + len(z.Tag) + 7 + msgp.ArrayHeaderSize + (len(z.Values) * (msgp.Float64Size)) + 3 + msgp.Int64Size
+	s = 1 + 4 + msgp.StringPrefixSize + len(z.Tag) + 7 + msgp.ArrayHeaderSize + (10 * (msgp.Float64Size)) + 3 + msgp.Int64Size
 	return
 }
 

@@ -6,7 +6,7 @@ package model
 type Sample struct {
 	Tag string
 	// TODO convert to array
-	Values []float64
+	Values [10]float64
 	TS     int64 //timestamp in nanoseconds
 }
 

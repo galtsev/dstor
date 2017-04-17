@@ -107,22 +107,16 @@ func easyjsonC80ae7adDecodeDanPimcoModel1(in *jlexer.Lexer, out *Sample) {
 		case "Values":
 			if in.IsNull() {
 				in.Skip()
-				out.Values = nil
 			} else {
 				in.Delim('[')
-				if out.Values == nil {
-					if !in.IsDelim(']') {
-						out.Values = make([]float64, 0, 8)
-					} else {
-						out.Values = []float64{}
-					}
-				} else {
-					out.Values = (out.Values)[:0]
-				}
+				v4 := 0
 				for !in.IsDelim(']') {
-					var v4 float64
-					v4 = float64(in.Float64())
-					out.Values = append(out.Values, v4)
+					if v4 < 10 {
+						out.Values[v4] = float64(in.Float64())
+						v4++
+					} else {
+						in.SkipRecursive()
+					}
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -154,18 +148,14 @@ func easyjsonC80ae7adEncodeDanPimcoModel1(out *jwriter.Writer, in Sample) {
 	}
 	first = false
 	out.RawString("\"Values\":")
-	if in.Values == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v5, v6 := range in.Values {
-			if v5 > 0 {
-				out.RawByte(',')
-			}
-			out.Float64(float64(v6))
+	out.RawByte('[')
+	for v5 := range in.Values {
+		if v5 > 0 {
+			out.RawByte(',')
 		}
-		out.RawByte(']')
+		out.Float64(float64(in.Values[v5]))
 	}
+	out.RawByte(']')
 	if !first {
 		out.RawByte(',')
 	}
