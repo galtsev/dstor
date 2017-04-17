@@ -1,7 +1,7 @@
 /*
 	Generate messages and write them all to Kafka topic, partition 0
 */
-package temp
+package command
 
 import (
 	"dan/pimco"

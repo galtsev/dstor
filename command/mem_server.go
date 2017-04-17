@@ -1,4 +1,4 @@
-package temp
+package command
 
 import (
 	"dan/pimco"
@@ -120,6 +120,6 @@ func MemServer(args []string) {
 	}
 	http.Handle("/report", makeReportHandler(db))
 	http.Handle("/scan", scanTag(db))
-	err := http.ListenAndServe(cfg.HTTPServer.Addr, nil)
+	err := http.ListenAndServe(cfg.ReportingServer.Addr, nil)
 	Check(err)
 }

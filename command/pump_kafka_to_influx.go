@@ -2,7 +2,7 @@
 	Read messages from Kafka topic and write them to influx using InfluxWriter.
 	Read only those messages, which exists in the partition when consumer starts.
 */
-package temp
+package command
 
 import (
 	"dan/pimco"

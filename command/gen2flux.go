@@ -1,4 +1,4 @@
-package temp
+package command
 
 import (
 	"dan/pimco"

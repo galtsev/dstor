@@ -1,4 +1,4 @@
-package temp
+package command
 
 import (
 	"dan/pimco"
@@ -43,7 +43,7 @@ func (w *clientWriter) Close() {
 func work(cfg pimco.Config, count int) {
 	//kafkaWriter := kafka.NewWriter(cfg.Kafka, int32(0))
 	writer := clientWriter{
-		url: "http://" + cfg.HTTPServer.Addr,
+		url: "http://" + cfg.ReceptorServer.Addr,
 		szr: serializer.NewSerializer("easyjson"),
 	}
 	dt, err := time.Parse(date_format, cfg.Gen.Start)

@@ -17,12 +17,13 @@ type InfluxConfig struct {
 }
 
 type KafkaConfig struct {
-	Hosts      []string
-	Topic      string
-	Partitions []int32
-	BatchSize  int `yaml:"batch_size"`
-	FlushDelay int `yaml:"flush_delay"` //milliseconds
-	Serializer string
+	Hosts         []string
+	Topic         string
+	NumPartitions int     `yaml:"num_partitions"` // total number of partitions in this topic
+	Partitions    []int32 // partitions to consume
+	BatchSize     int     `yaml:"batch_size"`
+	FlushDelay    int     `yaml:"flush_delay"` //milliseconds
+	Serializer    string
 }
 
 type GenConfig struct {
@@ -32,17 +33,26 @@ type GenConfig struct {
 	Tags  int // number of tags
 }
 
+type ClientConfig struct {
+	BatchSize int `yaml:"batch_size"`
+}
+
+type ReceptorServerConfig struct {
+	Addr string
+}
+
+type ReportingServerConfig struct {
+	Addr string
+}
+
 type Config struct {
-	Influx     InfluxConfig
-	Kafka      KafkaConfig
-	Gen        GenConfig
-	OneShot    bool `yaml:"one_shot"`
-	HTTPServer struct {
-		Addr string
-	}
-	Client struct {
-		BatchSize int `yaml:"batch_size"`
-	}
+	Influx          InfluxConfig
+	Kafka           KafkaConfig
+	Gen             GenConfig
+	ReportingServer ReportingServerConfig
+	ReceptorServer  ReceptorServerConfig
+	Client          ClientConfig
+	OneShot         bool `yaml:"one_shot"`
 }
 
 func (cfg Config) String() string {
@@ -58,12 +68,13 @@ func (cfg Config) String() string {
 func NewConfig() *Config {
 	cfg := Config{
 		Kafka: KafkaConfig{
-			Hosts:      []string{"192.168.0.2:9092"},
-			Topic:      "test",
-			Partitions: []int32{0, 1, 2, 3},
-			BatchSize:  200,
-			FlushDelay: 50,
-			Serializer: "msgp",
+			Hosts:         []string{"192.168.0.2:9092"},
+			Topic:         "test",
+			NumPartitions: 4,
+			Partitions:    []int32{0},
+			BatchSize:     200,
+			FlushDelay:    50,
+			Serializer:    "msgp",
 		},
 		Influx: InfluxConfig{
 			URL:         "http://192.168.0.2:8086",
@@ -78,10 +89,17 @@ func NewConfig() *Config {
 			Count: 10000,
 			Tags:  20,
 		},
+		ReceptorServer: ReceptorServerConfig{
+			Addr: "localhost:8787",
+		},
+		ReportingServer: ReportingServerConfig{
+			Addr: "localhost:8788",
+		},
+		Client: ClientConfig{
+			BatchSize: 10,
+		},
 		OneShot: false,
 	}
-	cfg.HTTPServer.Addr = "localhost:8787"
-	cfg.Client.BatchSize = 10
 
 	return &cfg
 }

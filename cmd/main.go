@@ -2,10 +2,10 @@ package main
 
 import (
 	_ "dan/pimco/client"
+	"dan/pimco/command"
 	"dan/pimco/receptor/batch"
 	"dan/pimco/receptor/direct"
 	"dan/pimco/receptor/kafka"
-	"dan/pimco/temp"
 	"fmt"
 	"log"
 	"os"
@@ -28,7 +28,7 @@ commands:
 
 	# experimenting
 	gen1 - ?
-	gen2flus - generate samples and write directly to influxdb
+	gen2flux - generate samples and write directly to influxdb
 	gen2kafka - generate samples and write to kafka
 	kafka2flux - read from kafka, write to influxdb
 	topic-stats - read kafka topic, show some stats
@@ -53,7 +53,7 @@ func main() {
 	case "client":
 		//client.Run(args)
 		timeIt(func() {
-			temp.Client(args)
+			command.Client(args)
 		})
 	case "recept-direct":
 		direct.Run(args)
@@ -63,26 +63,28 @@ func main() {
 		batch.Run(args)
 
 	// temporary
+	case "recept":
+		command.Recept2Kafka(args)
 	case "reporting-server-mem":
-		temp.MemServer(args)
+		command.MemServer(args)
 	case "gen2flux":
 		timeIt(func() {
-			temp.Run2(args)
+			command.Run2(args)
 		})
 	// consume topic from kafka, write to influx
 	case "kafka2flux":
 		timeIt(func() {
-			temp.PumpKafka2Influx(args)
+			command.PumpKafka2Influx(args)
 		})
 	// generate messages and write to kafka
 	case "gen2kafka":
 		timeIt(func() {
-			temp.Run4(args)
+			command.Run4(args)
 		})
 	case "topic-stats":
-		temp.TopicStats(args)
+		command.TopicStats(args)
 	case "show-config":
-		temp.ShowConfig(args)
+		command.ShowConfig(args)
 	default:
 		Usage()
 	}

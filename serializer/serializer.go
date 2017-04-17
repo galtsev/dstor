@@ -15,7 +15,7 @@ func (u UnknownSerializer) Error() string {
 
 type Serializer interface {
 	Marshal(v interface{}) []byte
-	Unmarshal(data []byte, v interface{})
+	Unmarshal(data []byte, v interface{}) error
 }
 
 type EasyJsonSerializer struct{}
@@ -26,8 +26,8 @@ func (s EasyJsonSerializer) Marshal(v interface{}) []byte {
 	return data
 }
 
-func (s EasyJsonSerializer) Unmarshal(data []byte, v interface{}) {
-	Check(easyjson.Unmarshal(data, v.(easyjson.Unmarshaler)))
+func (s EasyJsonSerializer) Unmarshal(data []byte, v interface{}) error {
+	return easyjson.Unmarshal(data, v.(easyjson.Unmarshaler))
 }
 
 func NewSerializer(name string) Serializer {
@@ -50,7 +50,7 @@ func (s MsgPackSerializer) Marshal(v interface{}) []byte {
 	return buf
 }
 
-func (s MsgPackSerializer) Unmarshal(data []byte, v interface{}) {
+func (s MsgPackSerializer) Unmarshal(data []byte, v interface{}) error {
 	_, err := v.(msgp.Unmarshaler).UnmarshalMsg(data)
-	Check(err)
+	return err
 }
