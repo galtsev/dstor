@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "dan/pimco/client"
 	"dan/pimco/command"
 	"dan/pimco/receptor/batch"
 	"dan/pimco/receptor/direct"

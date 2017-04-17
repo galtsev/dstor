@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/valyala/fasthttp"
-	"time"
 )
 
 type clientWriter struct {
@@ -40,18 +39,16 @@ func (w *clientWriter) Close() {
 	w.Flush()
 }
 
-func work(cfg pimco.Config, count int) {
+func work(cfg pimco.Config) {
 	//kafkaWriter := kafka.NewWriter(cfg.Kafka, int32(0))
 	writer := clientWriter{
 		url: "http://" + cfg.ReceptorServer.Addr,
 		szr: serializer.NewSerializer("easyjson"),
 	}
-	dt, err := time.Parse(date_format, cfg.Gen.Start)
-	Check(err)
-	gen := pimco.NewGenerator(cfg.Gen.Tags, dt.UnixNano(), cfg.Gen.Step)
+	gen := pimco.NewGenerator(cfg.Gen)
 	currentBatchSize := 0
-	for i := 0; i < count; i++ {
-		writer.Add(gen.Next())
+	for gen.Next() {
+		writer.Add(gen.Sample())
 		currentBatchSize++
 		if currentBatchSize >= cfg.Client.BatchSize {
 			writer.Flush()
@@ -64,5 +61,5 @@ func work(cfg pimco.Config, count int) {
 func Client(args []string) {
 	cfg := pimco.LoadConfig(args...)
 	fmt.Println(cfg)
-	work(cfg, cfg.Gen.Count)
+	work(cfg)
 }

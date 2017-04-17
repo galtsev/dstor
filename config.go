@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"time"
 )
 
 type InfluxConfig struct {
@@ -27,10 +28,21 @@ type KafkaConfig struct {
 }
 
 type GenConfig struct {
+	Mode  string
 	Start string
-	Step  int //ms
+	End   string
 	Count int
 	Tags  int // number of tags
+}
+
+const date_format = "2006-01-02 15:04"
+
+func (cfg GenConfig) Period() (start, end time.Time) {
+	ts, err := time.Parse(date_format, cfg.Start)
+	Check(err)
+	endTS, err := time.Parse(date_format, cfg.End)
+	Check(err)
+	return ts, endTS
 }
 
 type ClientConfig struct {
@@ -84,8 +96,8 @@ func NewConfig() *Config {
 			FlushDelay:  50,
 		},
 		Gen: GenConfig{
-			Start: "2017-04-06 10:00",
-			Step:  400,
+			Start: "2017-04-06 00:00",
+			End:   "2017-04-07 00:00",
 			Count: 10000,
 			Tags:  20,
 		},

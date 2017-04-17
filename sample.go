@@ -20,23 +20,33 @@ func MakeSample(ts int64, tag string) model.Sample {
 }
 
 type Generator struct {
-	ts   int64
-	step int64
-	tags []string
+	ts     int64
+	end_ts int64
+	step   int64
+	tags   []string
 }
 
-func (g *Generator) Next() *model.Sample {
+func (g *Generator) Next() bool {
+	g.ts += g.step
+	return g.ts <= g.end_ts
+}
+
+func (g *Generator) Sample() *model.Sample {
 	sample := MakeSample(g.ts, g.tags[rand.Intn(len(g.tags))])
 	g.ts += g.step
 	return &sample
 }
 
-func NewGenerator(tags int, ts int64, step int) *Generator {
+func NewGenerator(cfg GenConfig) *Generator {
+	ss, ee := cfg.Period()
+	ts, end_ts := ss.UnixNano(), ee.UnixNano()
+	step := (end_ts - ts) / int64(cfg.Count)
 	g := Generator{
-		ts:   ts,
-		step: int64(step * 1000000),
+		ts:     ts - 1,
+		end_ts: end_ts,
+		step:   step,
 	}
-	for i := 0; i < tags; i++ {
+	for i := 0; i < cfg.Tags; i++ {
 		g.tags = append(g.tags, fmt.Sprintf("tag%d", i))
 	}
 	return &g

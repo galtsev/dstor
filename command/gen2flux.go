@@ -2,7 +2,6 @@ package command
 
 import (
 	"dan/pimco"
-	. "dan/pimco/base"
 	"dan/pimco/influx"
 	"fmt"
 	"time"
@@ -13,11 +12,10 @@ func Run2(args []string) {
 	fmt.Println(cfg)
 	fluxWriter := influx.NewWriter(cfg.Influx)
 	w := pimco.NewWriter(fluxWriter, cfg.Influx.BatchSize, time.Duration(cfg.Influx.FlushDelay)*time.Millisecond)
-	dt, err := time.Parse(date_format, cfg.Gen.Start)
-	Check(err)
-	gen := pimco.NewGenerator(cfg.Gen.Tags, dt.UnixNano(), cfg.Gen.Step)
-	for i := 0; i < cfg.Gen.Count; i++ {
-		w.Write(gen.Next())
+	gen := pimco.NewGenerator(cfg.Gen)
+
+	for gen.Next() {
+		w.Write(gen.Sample())
 	}
 	w.Close()
 
