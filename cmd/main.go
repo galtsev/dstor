@@ -63,6 +63,9 @@ func main() {
 		batch.Run(args)
 
 	// temporary
+	case "query-flux":
+		timeIt(func() { command.QueryFlux(args) })
+		//command.QueryFlux(args)
 	case "recept":
 		command.Recept2Kafka(args)
 	case "reporting-server-mem":
