@@ -25,3 +25,6 @@ gen:
 
 httpserver:
   addr: "localhost:8787"
+
+leveldb:
+  path: "/home/dan/data/leveldb"

@@ -57,6 +57,10 @@ type ReportingServerConfig struct {
 	Addr string
 }
 
+type LeveldbConfig struct {
+	Path string
+}
+
 type Config struct {
 	Influx          InfluxConfig
 	Kafka           KafkaConfig
@@ -64,6 +68,7 @@ type Config struct {
 	ReportingServer ReportingServerConfig
 	ReceptorServer  ReceptorServerConfig
 	Client          ClientConfig
+	Leveldb         LeveldbConfig
 	OneShot         bool `yaml:"one_shot"`
 }
 
