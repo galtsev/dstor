@@ -21,3 +21,8 @@ func ReportLineFromSample(sample *model.Sample) *ReportLine {
 type Reporter interface {
 	Report(tag string, start, stop time.Time) []ReportLine
 }
+
+type Storage interface {
+	Reporter
+	AddSample(sample *model.Sample)
+}

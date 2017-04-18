@@ -3,6 +3,7 @@ package phttp
 import (
 	"dan/pimco"
 	. "dan/pimco/base"
+	"dan/pimco/kafka"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -38,4 +39,13 @@ func MakeReportHandler(db pimco.Reporter) http.Handler {
 		w.Header().Add("Content-Type", "application/json")
 		w.Write(body)
 	})
+}
+
+func Serve(cfg pimco.Config, db pimco.Storage) {
+	for _, partition := range cfg.Kafka.Partitions {
+		go kafka.PartitionLoader(cfg, partition, db)
+	}
+	http.Handle("/report", MakeReportHandler(db))
+	err := http.ListenAndServe(cfg.ReportingServer.Addr, nil)
+	Check(err)
 }
