@@ -19,6 +19,8 @@ type DB struct {
 	db       *leveldb.DB
 	szr      serializer.Serializer
 	tagIndex map[string]uint32
+	batch    leveldb.Batch
+	writer   *pimco.BatchWriter
 }
 
 func Open(cfg pimco.LeveldbConfig) *DB {
@@ -27,20 +29,35 @@ func Open(cfg pimco.LeveldbConfig) *DB {
 	db := DB{
 		db: ldb,
 	}
-	// TODO keep real map
+	// TODO implement real map
 	db.tagIndex = make(map[string]uint32)
 	for i := 0; i < 20; i++ {
 		tag := fmt.Sprintf("tag%d", i)
 		db.tagIndex[tag] = uint32(i)
 	}
 	db.szr = serializer.NewSerializer("msgp")
+	db.writer = pimco.NewWriter(&db, cfg.BatchSize, time.Duration(cfg.FlushDelay)*time.Millisecond)
 	return &db
 }
 
-func (db *DB) AddSample(sample *model.Sample) {
+func (db *DB) Add(sample *model.Sample) {
 	key := db.MakeKey(sample.Tag, sample.TS)
 	body := db.szr.Marshal(sample)
-	db.db.Put(key, body, nil)
+	db.batch.Put(key, body)
+}
+
+func (db *DB) Flush() {
+	db.db.Write(&db.batch, nil)
+	db.batch.Reset()
+}
+
+func (db *DB) Close() {
+	db.Flush()
+	db.db.Close()
+}
+
+func (db *DB) AddSample(sample *model.Sample) {
+	db.writer.Write(sample)
 }
 
 func (db *DB) MakeKey(tag string, ts int64) []byte {

@@ -58,7 +58,9 @@ type ReportingServerConfig struct {
 }
 
 type LeveldbConfig struct {
-	Path string
+	Path       string
+	BatchSize  int
+	FlushDelay int
 }
 
 type Config struct {
@@ -114,6 +116,11 @@ func NewConfig() *Config {
 		},
 		Client: ClientConfig{
 			BatchSize: 10,
+		},
+		Leveldb: LeveldbConfig{
+			Path:       "/home/dan/data/leveldb",
+			BatchSize:  1000,
+			FlushDelay: 50,
 		},
 		OneShot: false,
 	}
