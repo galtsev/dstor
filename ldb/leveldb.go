@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"log"
 	"time"
@@ -24,7 +25,12 @@ type DB struct {
 }
 
 func Open(cfg pimco.LeveldbConfig) *DB {
-	ldb, err := leveldb.OpenFile(cfg.Path, nil)
+	opts := opt.Options{
+		WriteBuffer:            16 * 1024 * 1024,
+		WriteL0SlowdownTrigger: 8,
+		WriteL0PauseTrigger:    32,
+	}
+	ldb, err := leveldb.OpenFile(cfg.Path, &opts)
 	Check(err)
 	db := DB{
 		db: ldb,

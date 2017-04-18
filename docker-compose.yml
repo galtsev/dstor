@@ -1,0 +1,35 @@
+version: '2'
+services:
+
+  influxdb:
+    container_name: influxdb
+    image: influxdb:1.2
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+    volumes:
+      - /code/data/influxdb:/var/lib/influxdb
+    network_mode: bridge
+
+  zookeeper:
+    container_name: zookeeper
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    network_mode: bridge
+
+  kafka:
+    container_name: kafka
+    image: wurstmeister/kafka:0.10.2.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 192.168.233.4
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_BROKER_ID: 911
+      KAFKA_CREATE_TOPICS: "test:4:1"
+      KAFKA_ZOOKEEPER_CONNECT: 192.168.233.4:2181
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+    volumes:
+      - /home/dan/data/kafka:/kafka
+    network_mode: bridge

@@ -18,6 +18,7 @@ commands:
 	show-config - dump current config to stdout
 	gen2flux - generate samples and write directly to influxdb
 	gen2kafka - generate samples and write to kafka
+	gen2leveldb - gen directly to leveldb
 	kafka2flux - read from kafka, write to influxdb
 	topic-stats - read kafka topic, show some stats
 	query-flux - get report data directly from influxdb
@@ -62,6 +63,8 @@ func main() {
 		timeIt(func() {
 			command.Run2(args)
 		})
+	case "gen2leveldb":
+		timeIt(func() { command.Gen2Leveldb(args) })
 	// consume topic from kafka, write to influx
 	case "kafka2flux":
 		timeIt(func() {
