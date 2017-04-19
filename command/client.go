@@ -3,34 +3,53 @@ package command
 import (
 	"dan/pimco"
 	"dan/pimco/api"
+	"dan/pimco/model"
+	"flag"
 	"fmt"
+	"sync"
 	"time"
 )
 
-func work(cfg pimco.Config) {
-	client := api.NewClient(cfg.Client)
-	gen := pimco.NewGenerator(cfg.Gen)
-	cnt := 0
+func pwork(cfg pimco.ClientConfig, ch chan model.Sample) {
+	client := api.NewClient(cfg)
 	currentBatchSize := 0
-	t := time.Now()
-	for gen.Next() {
-		client.Add(gen.Sample())
+	for sample := range ch {
+		client.Add(&sample)
 		currentBatchSize++
-		if currentBatchSize >= cfg.Client.BatchSize {
+		if currentBatchSize >= cfg.BatchSize {
 			client.Flush()
 			currentBatchSize = 0
 		}
-		if cnt%10000 == 0 {
-			fmt.Printf("%10d %10d\n", cnt, int(time.Since(t))/1000000)
-			t = time.Now()
-		}
-		cnt++
 	}
 	client.Close()
 }
 
 func Client(args []string) {
-	cfg := pimco.LoadConfig(args...)
+	fs := flag.NewFlagSet("client", flag.ExitOnError)
+	concurrency := fs.Int("c", 1, "Concurrency")
+	cfg := pimco.LoadConfigEx(fs, args...)
 	fmt.Println(cfg)
-	work(cfg)
+	ch := make(chan model.Sample, 100)
+	//work(cfg)
+	var wg sync.WaitGroup
+	for i := 0; i < *concurrency; i++ {
+		wg.Add(1)
+		go func() {
+			pwork(cfg.Client, ch)
+			wg.Done()
+		}()
+	}
+	gen := pimco.NewGenerator(cfg.Gen)
+	cnt := 0
+	t := time.Now()
+	for gen.Next() {
+		ch <- *gen.Sample()
+		cnt++
+		if cnt%20000 == 0 {
+			fmt.Printf("%10d %10d\n", cnt, int(time.Since(t))/1000000)
+			t = time.Now()
+		}
+	}
+	close(ch)
+	wg.Wait()
 }
