@@ -1,2 +1,4 @@
 cmd/cmd
 scripts/
+*.sublime-project
+*.sublime-workspace
