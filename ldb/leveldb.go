@@ -95,7 +95,7 @@ func (db *DB) Report(tag string, start, end time.Time) []pimco.ReportLine {
 	tsBegin, tsEnd := start.UnixNano(), end.UnixNano()
 	step := (tsEnd - tsBegin) / 100
 	var resp []pimco.ReportLine
-	var prevSample *model.Sample
+	var prevSample *model.Sample = &model.Sample{}
 	for ts := tsBegin; ts < tsEnd; ts += step {
 		sample, ok := db.ReportOne(tag, ts)
 		if !ok {

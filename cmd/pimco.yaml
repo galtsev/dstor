@@ -21,7 +21,7 @@ gen:
   count: 10000000
   tags: 20
 reportingserver:
-  addr: localhost:8788
+  addr: localhost:8787
 receptorserver:
   addr: localhost:8787
 client:

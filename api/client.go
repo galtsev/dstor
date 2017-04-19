@@ -34,8 +34,8 @@ func NewClient(cfg pimco.ClientConfig) *Client {
 func (c *Client) Report(tag string, start, stop time.Time) []pimco.ReportLine {
 	reqData := phttp.ReportRequest{
 		Tag:   tag,
-		Start: start.Format(DATE_FORMAT),
-		End:   stop.Format(DATE_FORMAT),
+		Start: start.Format(DATE_FORMAT_LONG),
+		End:   stop.Format(DATE_FORMAT_LONG),
 	}
 	body, err := json.Marshal(reqData)
 	Check(err)
@@ -46,7 +46,6 @@ func (c *Client) Report(tag string, start, stop time.Time) []pimco.ReportLine {
 	}
 	var respData []pimco.ReportLine
 	respBody, err := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(respBody))
 	Check(err)
 	Check(json.Unmarshal(respBody, &respData))
 	return respData

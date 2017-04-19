@@ -1,7 +1,9 @@
 package base
 
 const (
-	DATE_FORMAT = "2006-01-02 15:04"
+	// Mon Jan 2 15:04:05 -0700 MST 2006
+	DATE_FORMAT      = "2006-01-02 15:04"
+	DATE_FORMAT_LONG = "2006-01-02 15:04:05"
 )
 
 var (

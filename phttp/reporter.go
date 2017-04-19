@@ -17,11 +17,9 @@ type ReportRequest struct {
 }
 
 func (req ReportRequest) Period() (time.Time, time.Time) {
-	//Mon Jan 2 15:04:05 -0700 MST 2006
-	date_format := "2006-01-02 15:04:05"
-	start, err := time.Parse(date_format, req.Start)
+	start, err := time.Parse(DATE_FORMAT_LONG, req.Start)
 	Check(err)
-	stop, err := time.Parse(date_format, req.End)
+	stop, err := time.Parse(DATE_FORMAT_LONG, req.End)
 	Check(err)
 	return start, stop
 }
