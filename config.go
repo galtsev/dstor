@@ -35,17 +35,16 @@ type GenConfig struct {
 	Tags  int // number of tags
 }
 
-const date_format = "2006-01-02 15:04"
-
 func (cfg GenConfig) Period() (start, end time.Time) {
-	ts, err := time.Parse(date_format, cfg.Start)
+	ts, err := time.Parse(DATE_FORMAT, cfg.Start)
 	Check(err)
-	endTS, err := time.Parse(date_format, cfg.End)
+	endTS, err := time.Parse(DATE_FORMAT, cfg.End)
 	Check(err)
 	return ts, endTS
 }
 
 type ClientConfig struct {
+	Host      string
 	BatchSize int `yaml:"batch_size"`
 }
 
@@ -125,6 +124,7 @@ func NewConfig() *Config {
 			Addr: "localhost:8788",
 		},
 		Client: ClientConfig{
+			Host:      "localhost:8787",
 			BatchSize: 10,
 		},
 		Leveldb: LeveldbConfig{

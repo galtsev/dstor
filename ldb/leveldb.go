@@ -24,7 +24,7 @@ type DB struct {
 	writer   *pimco.BatchWriter
 }
 
-func Open(cfg pimco.LeveldbConfig) *DB {
+func Open(cfg pimco.LeveldbConfig, partition int32) *DB {
 	opts := opt.Options{
 		WriteBuffer:                   cfg.Opts.WriteBufferMb * opt.MiB,
 		CompactionTableSize:           cfg.Opts.CompactionTableSizeMb * opt.MiB,
@@ -32,7 +32,8 @@ func Open(cfg pimco.LeveldbConfig) *DB {
 		WriteL0SlowdownTrigger:        cfg.Opts.WriteL0SlowdownTrigger,
 		WriteL0PauseTrigger:           cfg.Opts.WriteL0PauseTrigger,
 	}
-	ldb, err := leveldb.OpenFile(cfg.Path, &opts)
+	partitionPath := fmt.Sprintf("%s/%d", cfg.Path, partition)
+	ldb, err := leveldb.OpenFile(partitionPath, &opts)
 	Check(err)
 	db := DB{
 		db: ldb,

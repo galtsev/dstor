@@ -1,9 +1,7 @@
 package base
 
-import (
-	"dan/pimco/model"
-	"github.com/influxdata/influxdb/client/v2"
-	"time"
+const (
+	DATE_FORMAT = "2006-01-02 15:04"
 )
 
 var (
@@ -15,22 +13,4 @@ func Check(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func AddSample(sample *model.Sample, batch client.BatchPoints) {
-	fields := make(map[string]interface{})
-	for idx, fn := range FIELD_NAMES {
-		fields[fn] = sample.Values[idx]
-	}
-	point, _ := client.NewPoint("ms", map[string]string{"tag": sample.Tag}, fields, time.Unix(0, sample.TS))
-	batch.AddPoint(point)
-}
-
-func AddSample_OLD(sample *model.Sample, batch client.BatchPoints) {
-	fields := make(map[string]interface{})
-	for idx, fn := range FIELD_NAMES {
-		fields[fn] = sample.Values[idx]
-	}
-	point, _ := client.NewPoint(sample.Tag, EMPTY_TAGS, fields, time.Unix(0, sample.TS))
-	batch.AddPoint(point)
 }

@@ -5,6 +5,7 @@ import (
 	. "dan/pimco/base"
 	"dan/pimco/model"
 	"github.com/influxdata/influxdb/client/v2"
+	"time"
 )
 
 type Writer struct {
@@ -44,4 +45,13 @@ func (w *Writer) Flush() {
 func (w *Writer) Close() {
 	w.Flush()
 	w.conn.Close()
+}
+
+func AddSample(sample *model.Sample, batch client.BatchPoints) {
+	fields := make(map[string]interface{})
+	for idx, fn := range FIELD_NAMES {
+		fields[fn] = sample.Values[idx]
+	}
+	point, _ := client.NewPoint("ms", map[string]string{"tag": sample.Tag}, fields, time.Unix(0, sample.TS))
+	batch.AddPoint(point)
 }

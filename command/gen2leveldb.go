@@ -13,7 +13,7 @@ import (
 func Gen2Leveldb(args []string) {
 	cfg := pimco.LoadConfig(args...)
 	fmt.Println(cfg)
-	db := ldb.Open(cfg.Leveldb)
+	db := ldb.Open(cfg.Leveldb, int32(0))
 	gen := pimco.NewGenerator(cfg.Gen)
 	h := &util.DurationHeap{}
 	heap.Init(h)
