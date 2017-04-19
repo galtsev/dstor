@@ -26,9 +26,11 @@ type DB struct {
 
 func Open(cfg pimco.LeveldbConfig) *DB {
 	opts := opt.Options{
-		WriteBuffer:            16 * 1024 * 1024,
-		WriteL0SlowdownTrigger: 8,
-		WriteL0PauseTrigger:    32,
+		WriteBuffer:                   cfg.Opts.WriteBufferMb * opt.MiB,
+		CompactionTableSize:           cfg.Opts.CompactionTableSizeMb * opt.MiB,
+		CompactionTotalSizeMultiplier: cfg.Opts.CompactionTotalSizeMultiplier,
+		WriteL0SlowdownTrigger:        cfg.Opts.WriteL0SlowdownTrigger,
+		WriteL0PauseTrigger:           cfg.Opts.WriteL0PauseTrigger,
 	}
 	ldb, err := leveldb.OpenFile(cfg.Path, &opts)
 	Check(err)

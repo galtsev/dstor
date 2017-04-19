@@ -57,10 +57,20 @@ type ReportingServerConfig struct {
 	Addr string
 }
 
+type LeveldbOptions struct {
+	WriteBufferMb                 int
+	CompactionTableSizeMb         int
+	CompactionTotalSizeMultiplier float64
+	WriteL0SlowdownTrigger        int
+	WriteL0PauseTrigger           int
+	CompactionL0Trigger           int
+}
+
 type LeveldbConfig struct {
 	Path       string
 	BatchSize  int
 	FlushDelay int
+	Opts       LeveldbOptions
 }
 
 type Config struct {
@@ -121,6 +131,14 @@ func NewConfig() *Config {
 			Path:       "/home/dan/data/leveldb",
 			BatchSize:  1000,
 			FlushDelay: 50,
+			Opts: LeveldbOptions{
+				WriteBufferMb:                 64,
+				CompactionTableSizeMb:         4,
+				CompactionTotalSizeMultiplier: 4,
+				CompactionL0Trigger:           2,
+				WriteL0SlowdownTrigger:        4,
+				WriteL0PauseTrigger:           12,
+			},
 		},
 		OneShot: false,
 	}

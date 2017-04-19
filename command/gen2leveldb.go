@@ -6,6 +6,7 @@ import (
 	"dan/pimco/ldb"
 	"dan/pimco/util"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -30,11 +31,11 @@ func Gen2Leveldb(args []string) {
 			if cnt/1000 > heapCap {
 				heap.Pop(h)
 			}
-			time.Sleep(time.Duration(10) * time.Millisecond)
+			//time.Sleep(time.Duration(10) * time.Millisecond)
 			startTime = time.Now()
 		}
 		if cnt%20000 == 0 {
-			fmt.Println(cnt, time.Since(stx))
+			log.Printf("%12d %12d", cnt, int(time.Since(stx))/1000000)
 			stx = time.Now()
 		}
 	}
