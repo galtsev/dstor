@@ -15,6 +15,7 @@ commands:
 	reporting-server-mem - reporting server with embedded loader. Read Kafka continuously, keep all samples in memory.
 	reporting-server-leveldb - reporting server that use leveldb as backend storage
 	reporting-server-influx - serve reports from influxdb
+	leveldb-standalone - receptor+reporter backed by leveldb
 	show-config - dump current config to stdout
 	gen2flux - generate samples and write directly to influxdb
 	gen2kafka - generate samples and write to kafka
@@ -59,6 +60,8 @@ func main() {
 		command.MemServer(args)
 	case "reporting-server-influx":
 		command.FluxServer(args)
+	case "leveldb-standalone":
+		command.LeveldbStandaloneServer(args)
 	case "gen2flux":
 		timeIt(func() {
 			command.Run2(args)
