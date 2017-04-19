@@ -7,6 +7,7 @@ import (
 	"dan/pimco/model"
 	"dan/pimco/phttp"
 	"dan/pimco/serializer"
+	"encoding/json"
 	"github.com/valyala/fasthttp"
 	"log"
 	"time"
@@ -60,7 +61,7 @@ func (srv *StandaloneLeveldbServer) handleWrite(ctx *fasthttp.RequestCtx) {
 
 func (srv *StandaloneLeveldbServer) handleReport(ctx *fasthttp.RequestCtx) {
 	var req phttp.ReportRequest
-	err := srv.json.Unmarshal(ctx.PostBody(), &req)
+	err := json.Unmarshal(ctx.PostBody(), &req)
 	if err != nil {
 		ctx.Error(err.Error(), fasthttp.StatusBadRequest)
 		return
@@ -68,7 +69,8 @@ func (srv *StandaloneLeveldbServer) handleReport(ctx *fasthttp.RequestCtx) {
 	start, stop := req.Period()
 	db := srv.reporters[srv.partitioner(req.Tag)]
 	lines := db.Report(req.Tag, start, stop)
-	body := srv.json.Marshal(lines)
+	body, err := json.Marshal(lines)
+	Check(err)
 	ctx.SetBody(body)
 	ctx.SetContentType("application/json")
 }
