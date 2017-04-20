@@ -15,10 +15,10 @@ kafka:
   flush_delay: 50
   serializer: msgp
 gen:
-  mode: ""
+  mode: "seq"
   start: 2017-04-07 00:00
   end: 2017-04-08 00:00
-  count: 10000000
+  count: 100000000
   tags: 20
 reportingserver:
   addr: localhost:8787

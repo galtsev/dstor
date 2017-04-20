@@ -24,6 +24,7 @@ commands:
 	topic-stats - read kafka topic, show some stats
 	query-flux - get report data directly from influxdb
 	query-reporter - get report data from reporter server
+	leveldb-gen - fast (sequential) generation for leveldb
 `, os.Args[0])
 }
 
@@ -82,6 +83,8 @@ func main() {
 		command.TopicStats(args)
 	case "show-config":
 		command.ShowConfig(args)
+	case "leveldb-gen":
+		timeIt(func() { command.LeveldbGen(args) })
 	default:
 		Usage()
 	}

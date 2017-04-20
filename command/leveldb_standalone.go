@@ -15,7 +15,7 @@ import (
 
 type StandaloneLeveldbServer struct {
 	channels    []*pimco.BatchWriter
-	reporters   []pimco.Reporter
+	reporters   []*ldb.DB
 	json        serializer.Serializer
 	partitioner func(string) int32
 }
@@ -32,6 +32,19 @@ func NewStandaloneLeveldbServer(cfg pimco.Config) *StandaloneLeveldbServer {
 		server.channels = append(server.channels, writer)
 	}
 	return &server
+}
+
+func (srv *StandaloneLeveldbServer) Close() {
+	for _, w := range srv.channels {
+		w.Close()
+	}
+	for _, db := range srv.reporters {
+		db.Close()
+	}
+}
+
+func (srv *StandaloneLeveldbServer) WriteSample(sample *model.Sample) {
+	srv.channels[srv.partitioner(sample.Tag)].Write(sample)
 }
 
 func (srv *StandaloneLeveldbServer) Route(ctx *fasthttp.RequestCtx) {
@@ -53,8 +66,7 @@ func (srv *StandaloneLeveldbServer) handleWrite(ctx *fasthttp.RequestCtx) {
 		return
 	}
 	for _, sample := range samples {
-		p := srv.partitioner(sample.Tag)
-		srv.channels[p].Write(&sample)
+		srv.WriteSample(&sample)
 	}
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }

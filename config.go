@@ -116,6 +116,7 @@ func NewConfig() *Config {
 			End:   "2017-04-07 00:00",
 			Count: 10000,
 			Tags:  20,
+			Mode:  "random",
 		},
 		ReceptorServer: ReceptorServerConfig{
 			Addr: "localhost:8787",
