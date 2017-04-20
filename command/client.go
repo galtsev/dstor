@@ -4,10 +4,10 @@ import (
 	"dan/pimco"
 	"dan/pimco/api"
 	"dan/pimco/model"
+	"dan/pimco/util"
 	"flag"
 	"fmt"
 	"sync"
-	"time"
 )
 
 func pwork(cfg pimco.ClientConfig, ch chan model.Sample) {
@@ -40,15 +40,10 @@ func Client(args []string) {
 		}()
 	}
 	gen := pimco.NewGenerator(cfg.Gen)
-	cnt := 0
-	t := time.Now()
+	progress := util.NewProgress(100000)
 	for gen.Next() {
 		ch <- *gen.Sample()
-		cnt++
-		if cnt%20000 == 0 {
-			fmt.Printf("%10d %10d\n", cnt, int(time.Since(t))/1000000)
-			t = time.Now()
-		}
+		progress.Step()
 	}
 	close(ch)
 	wg.Wait()
