@@ -59,6 +59,7 @@ type ReportingServerConfig struct {
 type LeveldbOptions struct {
 	WriteBufferMb                 int
 	CompactionTableSizeMb         int
+	CompactionTotalSizeMb         int
 	CompactionTotalSizeMultiplier float64
 	WriteL0SlowdownTrigger        int
 	WriteL0PauseTrigger           int
@@ -135,6 +136,7 @@ func NewConfig() *Config {
 			Opts: LeveldbOptions{
 				WriteBufferMb:                 64,
 				CompactionTableSizeMb:         4,
+				CompactionTotalSizeMb:         40,
 				CompactionTotalSizeMultiplier: 4,
 				CompactionL0Trigger:           2,
 				WriteL0SlowdownTrigger:        4,

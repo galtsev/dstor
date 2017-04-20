@@ -28,6 +28,7 @@ func Open(cfg pimco.LeveldbConfig, partition int32) *DB {
 	opts := opt.Options{
 		WriteBuffer:                   cfg.Opts.WriteBufferMb * opt.MiB,
 		CompactionTableSize:           cfg.Opts.CompactionTableSizeMb * opt.MiB,
+		CompactionTotalSize:           cfg.Opts.CompactionTotalSizeMb * opt.MiB,
 		CompactionTotalSizeMultiplier: cfg.Opts.CompactionTotalSizeMultiplier,
 		WriteL0SlowdownTrigger:        cfg.Opts.WriteL0SlowdownTrigger,
 		WriteL0PauseTrigger:           cfg.Opts.WriteL0PauseTrigger,
