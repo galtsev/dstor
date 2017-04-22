@@ -73,6 +73,12 @@ type LeveldbConfig struct {
 	Opts       LeveldbOptions
 }
 
+type MetricsConfig struct {
+	Addr       string
+	EnableHist bool
+	EnableSum  bool
+}
+
 type Config struct {
 	Influx          InfluxConfig
 	Kafka           KafkaConfig
@@ -80,6 +86,7 @@ type Config struct {
 	ReportingServer ReportingServerConfig
 	ReceptorServer  ReceptorServerConfig
 	Client          ClientConfig
+	Metrics         MetricsConfig
 	Leveldb         LeveldbConfig
 	OneShot         bool `yaml:"one_shot"`
 }
@@ -124,6 +131,11 @@ func NewConfig() *Config {
 		},
 		ReportingServer: ReportingServerConfig{
 			Addr: "localhost:8788",
+		},
+		Metrics: MetricsConfig{
+			Addr:       ":8789",
+			EnableHist: true,
+			EnableSum:  false,
 		},
 		Client: ClientConfig{
 			Host:      "localhost:8787",

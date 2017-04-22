@@ -1,6 +1,7 @@
 package pimco
 
 import (
+	. "dan/pimco"
 	"dan/pimco/model"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -15,7 +16,7 @@ func TestGenerator(t *testing.T) {
 		Tags:  20,
 	}
 	gen := NewGenerator(cfg)
-	expectedFirst, err := time.Parse(date_format, cfg.Start)
+	expectedFirst, err := time.Parse(DATE_FORMAT, cfg.Start)
 	assert.NoError(t, err)
 	gen.Next()
 	first := gen.Sample()
@@ -28,7 +29,7 @@ func TestGenerator(t *testing.T) {
 	}
 	assert.Equal(t, cfg.Count, cnt)
 
-	expectedLast, err := time.Parse(date_format, cfg.End)
+	expectedLast, err := time.Parse(DATE_FORMAT, cfg.End)
 	assert.NoError(t, err)
 	expectedLast = expectedLast.Add(time.Duration(-2) * time.Second)
 	assert.Equal(t, expectedLast.UnixNano(), sample.TS)

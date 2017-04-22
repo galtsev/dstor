@@ -2,6 +2,7 @@ package pimco
 
 import (
 	"dan/pimco/model"
+	"dan/pimco/prom"
 	"log"
 	"sync"
 	"time"
@@ -13,9 +14,14 @@ type Writer interface {
 	Close()
 }
 
+type trackedSample struct {
+	sample model.Sample
+	start  time.Time
+}
+
 type BatchWriter struct {
 	out        Writer
-	ch         chan model.Sample
+	ch         chan trackedSample
 	wg         sync.WaitGroup
 	batchSize  int
 	flushDelay time.Duration
@@ -25,7 +31,7 @@ type BatchWriter struct {
 func NewWriter(out Writer, batchSize int, flushDelay time.Duration) *BatchWriter {
 	w := BatchWriter{
 		out:        out,
-		ch:         make(chan model.Sample, 1000),
+		ch:         make(chan trackedSample, 1000),
 		batchSize:  batchSize,
 		flushDelay: flushDelay,
 	}
@@ -38,7 +44,11 @@ func (w *BatchWriter) SetVerbose(value bool) {
 }
 
 func (w *BatchWriter) Write(sample *model.Sample) {
-	w.ch <- *sample
+	ts := trackedSample{
+		sample: *sample,
+		start:  time.Now(),
+	}
+	w.ch <- ts
 }
 
 func (w *BatchWriter) Close() {
@@ -51,6 +61,8 @@ func (w *BatchWriter) writeLoop() {
 	var cnt int
 	var chanClosed bool
 	timer := time.NewTimer(w.flushDelay)
+	// store batched samples arrival time here for delay tracking
+	var times []time.Time
 	for !chanClosed {
 		// reset to initial state (empty batch)
 		w.out.Flush()
@@ -68,7 +80,8 @@ func (w *BatchWriter) writeLoop() {
 			// channel closed, no samples collected yet, just exit
 			break
 		}
-		w.out.Add(&sample)
+		w.out.Add(&sample.sample)
+		times = append(times, sample.start)
 		cnt++
 		timer.Reset(w.flushDelay)
 		flush := false
@@ -76,7 +89,8 @@ func (w *BatchWriter) writeLoop() {
 			select {
 			case sample, ok := <-w.ch:
 				if ok {
-					w.out.Add(&sample)
+					w.out.Add(&sample.sample)
+					times = append(times, sample.start)
 					cnt++
 					if cnt >= w.batchSize {
 						flush = true
@@ -90,6 +104,11 @@ func (w *BatchWriter) writeLoop() {
 			}
 		}
 		w.out.Flush()
+		finish := time.Now()
+		for _, t := range times {
+			prom.SampleWrite(finish.Sub(t))
+		}
+		times = times[:0]
 		if w.verbose {
 			log.Printf("Writing batch of size %d", cnt)
 		}

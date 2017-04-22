@@ -6,10 +6,13 @@ import (
 	"dan/pimco/ldb"
 	"dan/pimco/model"
 	"dan/pimco/phttp"
+	"dan/pimco/prom"
 	"dan/pimco/serializer"
 	"encoding/json"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/valyala/fasthttp"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -48,13 +51,20 @@ func (srv *StandaloneLeveldbServer) WriteSample(sample *model.Sample) {
 }
 
 func (srv *StandaloneLeveldbServer) Route(ctx *fasthttp.RequestCtx) {
+	start := time.Now()
+	var path string
 	switch string(ctx.Path()) {
 	case "/write":
 		srv.handleWrite(ctx)
+		path = "write"
 	case "/report":
 		srv.handleReport(ctx)
+		path = "report"
 	default:
 		ctx.NotFound()
+	}
+	if path != "" {
+		prom.RequestTime(path, time.Now().Sub(start))
 	}
 }
 
@@ -91,6 +101,12 @@ func LeveldbStandaloneServer(args []string) {
 	cfg := pimco.LoadConfig(args...)
 	log.Println(cfg)
 	srv := NewStandaloneLeveldbServer(cfg)
+	// serve metrics
+	prom.Setup(cfg.Metrics.EnableHist, cfg.Metrics.EnableSum)
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		log.Fatalln(http.ListenAndServe(cfg.Metrics.Addr, nil))
+	}()
 	err := fasthttp.ListenAndServe(cfg.ReceptorServer.Addr, srv.Route)
 	// TODO - handle graceful shutdown - drain save channels first
 	Check(err)
