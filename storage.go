@@ -2,6 +2,7 @@ package pimco
 
 import (
 	"dan/pimco/model"
+	"log"
 	"time"
 )
 
@@ -37,6 +38,7 @@ type Backend interface {
 }
 
 func RegisterBackend(name string, factory func(cfg Config) Backend) {
+	log.Printf("Registered backend %s", name)
 	backendRegistry[name] = factory
 }
 

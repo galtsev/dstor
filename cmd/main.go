@@ -2,6 +2,7 @@ package main
 
 import (
 	"dan/pimco/command"
+	_ "dan/pimco/ldb"
 	"fmt"
 	"log"
 	"os"
