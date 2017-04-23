@@ -6,6 +6,8 @@ import (
 	. "dan/pimco/base"
 	"flag"
 	"fmt"
+	"math"
+	"math/rand"
 	"time"
 )
 
@@ -23,6 +25,23 @@ func QueryReporter(args []string) {
 	stop, err := time.Parse(DATE_FORMAT, *endStr)
 	Check(err)
 	client := api.NewClient(cfg.Client)
+	pp := 1 / math.Log(1-0.01)
+	nTags := cfg.Gen.Tags
+	tags := make([]string, nTags)
+	for i := range tags {
+		tags[i] = fmt.Sprintf("tag%d", i)
+	}
+	randn := func() int {
+		var v float64
+		for v == 0 {
+			v = rand.Float64()
+			index := int(pp * math.Log(v))
+			if index < nTags {
+				return index
+			}
+		}
+		return 0
+	}
 	if *bench == 0 {
 		lines := client.Report(*tag, start, stop)
 		for _, line := range lines {
@@ -30,7 +49,8 @@ func QueryReporter(args []string) {
 		}
 	} else {
 		for i := 0; i < *bench; i++ {
-			_ = client.Report(*tag, start, stop)
+			atag := tags[randn()]
+			_ = client.Report(atag, start, stop)
 		}
 	}
 }
