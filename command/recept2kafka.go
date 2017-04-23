@@ -8,12 +8,11 @@ import (
 	"dan/pimco/serializer"
 	"fmt"
 	"github.com/valyala/fasthttp"
-	"time"
 )
 
-func kafkaSaveLoop(cfg pimco.KafkaConfig, partition int32, ch chan model.Sample) {
-	kafkaWriter := kafka.NewWriter(cfg, partition)
-	w := pimco.NewWriter(kafkaWriter, cfg.BatchSize, time.Duration(cfg.FlushDelay)*time.Millisecond)
+func kafkaSaveLoop(cfg pimco.Config, partition int32, ch chan model.Sample) {
+	kafkaWriter := kafka.NewWriter(cfg.Kafka, partition)
+	w := pimco.NewWriter(kafkaWriter, cfg.Batch)
 	for sample := range ch {
 		w.Write(&sample)
 	}
@@ -45,10 +44,10 @@ func Recept2Kafka(args []string) {
 	saveChannels := make([]chan model.Sample, cfg.Kafka.NumPartitions)
 	for partition := range saveChannels {
 		ch := make(chan model.Sample, 1000)
-		go kafkaSaveLoop(cfg.Kafka, int32(partition), ch)
+		go kafkaSaveLoop(cfg, int32(partition), ch)
 		saveChannels[partition] = ch
 	}
-	err := fasthttp.ListenAndServe(cfg.ReceptorServer.Addr, makeHandler(saveChannels))
+	err := fasthttp.ListenAndServe(cfg.Server.Addr, makeHandler(saveChannels))
 	// TODO - handle graceful shutdown - drain save channels first
 	Check(err)
 

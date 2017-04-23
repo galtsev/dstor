@@ -11,20 +11,14 @@ import (
 func Usage() {
 	fmt.Printf(`Usage: %s <cmd> <options>
 commands: 
-	client - test http client, 
-	reporting-server-mem - reporting server with embedded loader. Read Kafka continuously, keep all samples in memory.
-	reporting-server-leveldb - reporting server that use leveldb as backend storage
-	reporting-server-influx - serve reports from influxdb
-	leveldb-standalone - receptor+reporter backed by leveldb
+	client - test http client,
+	gen - generate samples and write to backend,
+	serve - start http server that handle /write and /report requests using specified backend
+	receipt - start http server that handle /write requests and write to kafka
 	show-config - dump current config to stdout
-	gen2flux - generate samples and write directly to influxdb
-	gen2kafka - generate samples and write to kafka
-	gen2leveldb - gen directly to leveldb
 	kafka2flux - read from kafka, write to influxdb
 	topic-stats - read kafka topic, show some stats
-	query-flux - get report data directly from influxdb
 	query-reporter - get report data from reporter server
-	leveldb-gen - fast (sequential) generation for leveldb
 `, os.Args[0])
 }
 
@@ -48,43 +42,27 @@ func main() {
 		timeIt(func() {
 			command.Client(args)
 		})
-	case "query-flux":
-		timeIt(func() { command.QueryFlux(args) })
+	case "gen":
+		timeIt(func() {
+			command.Gen(args)
+		})
+	case "serve":
+		command.Serve(args)
 		//command.QueryFlux(args)
 	case "query-reporter":
 		timeIt(func() { command.QueryReporter(args) })
 	case "recept":
 		command.Recept2Kafka(args)
-	case "reporting-server-leveldb":
-		command.LeveldbServer(args)
-	case "reporting-server-mem":
-		command.MemServer(args)
-	case "reporting-server-influx":
-		command.FluxServer(args)
-	case "leveldb-standalone":
-		command.LeveldbStandaloneServer(args)
-	case "gen2flux":
-		timeIt(func() {
-			command.Run2(args)
-		})
-	case "gen2leveldb":
-		timeIt(func() { command.Gen2Leveldb(args) })
 	// consume topic from kafka, write to influx
 	case "kafka2flux":
 		timeIt(func() {
 			command.PumpKafka2Influx(args)
 		})
 	// generate messages and write to kafka
-	case "gen2kafka":
-		timeIt(func() {
-			command.Run4(args)
-		})
 	case "topic-stats":
 		command.TopicStats(args)
 	case "show-config":
 		command.ShowConfig(args)
-	case "leveldb-gen":
-		timeIt(func() { command.LeveldbGen(args) })
 	default:
 		Usage()
 	}

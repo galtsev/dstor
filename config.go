@@ -13,8 +13,6 @@ type InfluxConfig struct {
 	URL         string
 	Database    string
 	Measurement string
-	BatchSize   int `yaml:"batch_size"`
-	FlushDelay  int `yaml:"flush_delay"` //milliseconds
 }
 
 type KafkaConfig struct {
@@ -22,8 +20,6 @@ type KafkaConfig struct {
 	Topic         string
 	NumPartitions int     `yaml:"num_partitions"` // total number of partitions in this topic
 	Partitions    []int32 // partitions to consume
-	BatchSize     int     `yaml:"batch_size"`
-	FlushDelay    int     `yaml:"flush_delay"` //milliseconds
 	Serializer    string
 }
 
@@ -48,12 +44,9 @@ type ClientConfig struct {
 	BatchSize int `yaml:"batch_size"`
 }
 
-type ReceptorServerConfig struct {
-	Addr string
-}
-
-type ReportingServerConfig struct {
-	Addr string
+type ServerConfig struct {
+	Addr    string
+	Backend string
 }
 
 type LeveldbOptions struct {
@@ -67,10 +60,8 @@ type LeveldbOptions struct {
 }
 
 type LeveldbConfig struct {
-	Path       string
-	BatchSize  int
-	FlushDelay int
-	Opts       LeveldbOptions
+	Path string
+	Opts LeveldbOptions
 }
 
 type MetricsConfig struct {
@@ -79,16 +70,21 @@ type MetricsConfig struct {
 	EnableSum  bool
 }
 
+type BatchConfig struct {
+	BatchSize  int `yaml:"batch_size"`
+	FlushDelay int `yaml:"flush_delay"`
+}
+
 type Config struct {
-	Influx          InfluxConfig
-	Kafka           KafkaConfig
-	Gen             GenConfig
-	ReportingServer ReportingServerConfig
-	ReceptorServer  ReceptorServerConfig
-	Client          ClientConfig
-	Metrics         MetricsConfig
-	Leveldb         LeveldbConfig
-	OneShot         bool `yaml:"one_shot"`
+	Batch   BatchConfig
+	Influx  InfluxConfig
+	Kafka   KafkaConfig
+	Gen     GenConfig
+	Server  ServerConfig
+	Client  ClientConfig
+	Metrics MetricsConfig
+	Leveldb LeveldbConfig
+	OneShot bool `yaml:"one_shot"`
 }
 
 func (cfg Config) String() string {
@@ -96,28 +92,27 @@ func (cfg Config) String() string {
 		cfg.Influx.URL,
 		cfg.Influx.Database,
 		cfg.Influx.Measurement,
-		cfg.Influx.BatchSize,
 		cfg.Gen.Count,
 	)
 }
 
 func NewConfig() *Config {
 	cfg := Config{
+		Batch: BatchConfig{
+			BatchSize:  1000,
+			FlushDelay: 50, //ms
+		},
 		Kafka: KafkaConfig{
 			Hosts:         []string{"192.168.0.2:9092"},
 			Topic:         "test",
 			NumPartitions: 4,
 			Partitions:    []int32{0},
-			BatchSize:     200,
-			FlushDelay:    50,
 			Serializer:    "msgp",
 		},
 		Influx: InfluxConfig{
 			URL:         "http://192.168.0.2:8086",
 			Database:    "test",
 			Measurement: "ms",
-			BatchSize:   1000,
-			FlushDelay:  50,
 		},
 		Gen: GenConfig{
 			Start: "2017-04-06 00:00",
@@ -126,11 +121,8 @@ func NewConfig() *Config {
 			Tags:  20,
 			Mode:  "random",
 		},
-		ReceptorServer: ReceptorServerConfig{
+		Server: ServerConfig{
 			Addr: "localhost:8787",
-		},
-		ReportingServer: ReportingServerConfig{
-			Addr: "localhost:8788",
 		},
 		Metrics: MetricsConfig{
 			Addr:       ":8789",
@@ -142,9 +134,7 @@ func NewConfig() *Config {
 			BatchSize: 10,
 		},
 		Leveldb: LeveldbConfig{
-			Path:       "/home/dan/data/leveldb",
-			BatchSize:  1000,
-			FlushDelay: 50,
+			Path: "/home/dan/data/leveldb",
 			Opts: LeveldbOptions{
 				WriteBufferMb:                 64,
 				CompactionTableSizeMb:         4,
@@ -173,7 +163,7 @@ func LoadConfigEx(fs *flag.FlagSet, args ...string) Config {
 	if fs == nil {
 		fs = flag.NewFlagSet("base", flag.ExitOnError)
 	}
-	fs.IntVar(&cfg.Influx.BatchSize, "ibs", cfg.Influx.BatchSize, "Influx batch size")
+	fs.IntVar(&cfg.Batch.BatchSize, "bs", cfg.Batch.BatchSize, "batch size")
 	fs.IntVar(&cfg.Gen.Count, "count", cfg.Gen.Count, "Count")
 	fs.Parse(args)
 	return *cfg

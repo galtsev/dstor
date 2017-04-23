@@ -3,18 +3,20 @@ package command
 import (
 	"dan/pimco"
 	"dan/pimco/util"
-	"log"
+	"fmt"
 )
 
-func LeveldbGen(args []string) {
+func Gen(args []string) {
 	cfg := pimco.LoadConfig(args...)
-	log.Println(cfg)
-	srv := NewStandaloneLeveldbServer(cfg)
+	fmt.Println(cfg)
+	backend := pimco.MakeBackend(cfg.Server.Backend, cfg)
 	gen := pimco.NewGenerator(cfg.Gen)
 	progress := util.NewProgress(100000)
+
 	for gen.Next() {
-		srv.WriteSample(gen.Sample())
+		backend.AddSample(gen.Sample())
 		progress.Step()
 	}
-	srv.Close()
+	backend.Close()
+
 }

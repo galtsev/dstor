@@ -21,7 +21,7 @@ type DB struct {
 	Tags map[string]*skip.SkipList
 }
 
-func NewDB() *DB {
+func New() *DB {
 	db := &DB{
 		Tags: make(map[string]*skip.SkipList),
 	}
@@ -66,4 +66,8 @@ func (db *DB) Report(tag string, start, end time.Time) []pimco.ReportLine {
 		resp = append(resp, *pimco.ReportLineFromSample(sample))
 	}
 	return resp
+}
+
+func (db *DB) Close() {
+
 }

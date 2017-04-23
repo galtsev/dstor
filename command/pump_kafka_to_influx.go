@@ -10,7 +10,6 @@ import (
 	"dan/pimco/kafka"
 	"log"
 	"sync"
-	"time"
 )
 
 func PumpKafka2Influx(args []string) {
@@ -29,15 +28,14 @@ func PumpKafka2Influx(args []string) {
 
 // TODO Graceful cancelation
 func consumePartition(cfg pimco.Config, partition int32) {
-	fluxWriter := influx.NewWriter(cfg.Influx)
-	w := pimco.NewWriter(fluxWriter, cfg.Influx.BatchSize, time.Duration(cfg.Influx.FlushDelay)*time.Millisecond)
+	backend := influx.New(cfg.Influx, cfg.Batch)
 
 	cnt := 0
 
 	for sample := range kafka.ConsumePartition(cfg.Kafka, partition, cfg.OneShot) {
-		w.Write(&sample)
+		backend.AddSample(&sample)
 		cnt++
 	}
-	w.Close()
+	backend.Close()
 	log.Printf("Partition %d transfered %d samples\n", partition, cnt)
 }

@@ -28,12 +28,12 @@ type BatchWriter struct {
 	verbose    bool
 }
 
-func NewWriter(out Writer, batchSize int, flushDelay time.Duration) *BatchWriter {
+func NewWriter(out Writer, cfg BatchConfig) *BatchWriter {
 	w := BatchWriter{
 		out:        out,
 		ch:         make(chan trackedSample, 1000),
-		batchSize:  batchSize,
-		flushDelay: flushDelay,
+		batchSize:  cfg.BatchSize,
+		flushDelay: time.Duration(cfg.FlushDelay) * time.Millisecond,
 	}
 	go w.writeLoop()
 	return &w

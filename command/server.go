@@ -3,12 +3,12 @@ package command
 import (
 	"dan/pimco"
 	. "dan/pimco/base"
-	"dan/pimco/ldb"
 	"dan/pimco/model"
 	"dan/pimco/phttp"
 	"dan/pimco/prom"
 	"dan/pimco/serializer"
 	"encoding/json"
+	"flag"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/valyala/fasthttp"
 	"log"
@@ -16,41 +16,22 @@ import (
 	"time"
 )
 
-type StandaloneLeveldbServer struct {
-	channels    []*pimco.BatchWriter
-	reporters   []*ldb.DB
+type Server struct {
+	backend     pimco.Backend
 	json        serializer.Serializer
 	partitioner func(string) int32
 }
 
-func NewStandaloneLeveldbServer(cfg pimco.Config) *StandaloneLeveldbServer {
-	server := StandaloneLeveldbServer{
+func NewServer(cfg pimco.Config) *Server {
+	server := Server{
 		json:        serializer.NewSerializer("easyjson"),
 		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
-	}
-	for p := 0; p < cfg.Kafka.NumPartitions; p++ {
-		db := ldb.Open(cfg.Leveldb, int32(p))
-		server.reporters = append(server.reporters, db)
-		writer := pimco.NewWriter(db, cfg.Leveldb.BatchSize, time.Duration(cfg.Leveldb.FlushDelay)*time.Millisecond)
-		server.channels = append(server.channels, writer)
+		backend:     pimco.MakeBackend(cfg.Server.Backend, cfg),
 	}
 	return &server
 }
 
-func (srv *StandaloneLeveldbServer) Close() {
-	for _, w := range srv.channels {
-		w.Close()
-	}
-	for _, db := range srv.reporters {
-		db.Close()
-	}
-}
-
-func (srv *StandaloneLeveldbServer) WriteSample(sample *model.Sample) {
-	srv.channels[srv.partitioner(sample.Tag)].Write(sample)
-}
-
-func (srv *StandaloneLeveldbServer) Route(ctx *fasthttp.RequestCtx) {
+func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 	start := time.Now()
 	var path string
 	switch string(ctx.Path()) {
@@ -68,7 +49,7 @@ func (srv *StandaloneLeveldbServer) Route(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-func (srv *StandaloneLeveldbServer) handleWrite(ctx *fasthttp.RequestCtx) {
+func (srv *Server) handleWrite(ctx *fasthttp.RequestCtx) {
 	var samples model.Samples
 	err := srv.json.Unmarshal(ctx.PostBody(), &samples)
 	if err != nil {
@@ -76,12 +57,12 @@ func (srv *StandaloneLeveldbServer) handleWrite(ctx *fasthttp.RequestCtx) {
 		return
 	}
 	for _, sample := range samples {
-		srv.WriteSample(&sample)
+		srv.backend.AddSample(&sample)
 	}
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }
 
-func (srv *StandaloneLeveldbServer) handleReport(ctx *fasthttp.RequestCtx) {
+func (srv *Server) handleReport(ctx *fasthttp.RequestCtx) {
 	var req phttp.ReportRequest
 	err := json.Unmarshal(ctx.PostBody(), &req)
 	if err != nil {
@@ -89,25 +70,27 @@ func (srv *StandaloneLeveldbServer) handleReport(ctx *fasthttp.RequestCtx) {
 		return
 	}
 	start, stop := req.Period()
-	db := srv.reporters[srv.partitioner(req.Tag)]
-	lines := db.Report(req.Tag, start, stop)
+	lines := srv.backend.Report(req.Tag, start, stop)
 	body, err := json.Marshal(lines)
 	Check(err)
 	ctx.SetBody(body)
 	ctx.SetContentType("application/json")
 }
 
-func LeveldbStandaloneServer(args []string) {
-	cfg := pimco.LoadConfig(args...)
+func Serve(args []string) {
+	fs := flag.NewFlagSet("server", flag.ExitOnError)
+	backend := fs.String("backend", "leveldb", "Backend type (leveldb | influxdb | memdb)")
+	cfg := pimco.LoadConfigEx(fs, args...)
+	cfg.Server.Backend = *backend
 	log.Println(cfg)
-	srv := NewStandaloneLeveldbServer(cfg)
+	srv := NewServer(cfg)
 	// serve metrics
 	prom.Setup(cfg.Metrics.EnableHist, cfg.Metrics.EnableSum)
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {
 		log.Fatalln(http.ListenAndServe(cfg.Metrics.Addr, nil))
 	}()
-	err := fasthttp.ListenAndServe(cfg.ReceptorServer.Addr, srv.Route)
+	err := fasthttp.ListenAndServe(cfg.Server.Addr, srv.Route)
 	// TODO - handle graceful shutdown - drain save channels first
 	Check(err)
 

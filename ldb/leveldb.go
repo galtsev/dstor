@@ -24,7 +24,7 @@ type DB struct {
 	writer   *pimco.BatchWriter
 }
 
-func Open(cfg pimco.LeveldbConfig, partition int32) *DB {
+func Open(cfg pimco.LeveldbConfig, batchConfig pimco.BatchConfig, partition int32) *DB {
 	opts := opt.Options{
 		WriteBuffer:                   cfg.Opts.WriteBufferMb * opt.MiB,
 		CompactionTableSize:           cfg.Opts.CompactionTableSizeMb * opt.MiB,
@@ -46,7 +46,7 @@ func Open(cfg pimco.LeveldbConfig, partition int32) *DB {
 		db.tagIndex[tag] = uint32(i)
 	}
 	db.szr = serializer.NewSerializer("msgp")
-	db.writer = pimco.NewWriter(&db, cfg.BatchSize, time.Duration(cfg.FlushDelay)*time.Millisecond)
+	db.writer = pimco.NewWriter(&db, batchConfig)
 	return &db
 }
 

@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+var (
+	backendRegistry = make(map[string]func(cfg Config) Backend)
+)
+
 type ReportLine struct {
 	TS     int64
 	Values [10]float64
@@ -23,6 +27,19 @@ type Reporter interface {
 }
 
 type Storage interface {
-	Reporter
 	AddSample(sample *model.Sample)
+	Close()
+}
+
+type Backend interface {
+	Storage
+	Reporter
+}
+
+func RegisterBackend(name string, factory func(cfg Config) Backend) {
+	backendRegistry[name] = factory
+}
+
+func MakeBackend(name string, cfg Config) Backend {
+	return backendRegistry[name](cfg)
 }
