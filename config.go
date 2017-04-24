@@ -62,6 +62,7 @@ type LeveldbOptions struct {
 type LeveldbConfig struct {
 	Path string
 	Opts LeveldbOptions
+	TTL  string // sample would be removed on compaction after this period. format as time.Duration.Parse, eg. 600s
 }
 
 type MetricsConfig struct {
