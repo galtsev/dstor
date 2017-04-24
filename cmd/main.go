@@ -64,6 +64,8 @@ func main() {
 		command.TopicStats(args)
 	case "show-config":
 		command.ShowConfig(args)
+	case "leveldb-stats":
+		command.LeveldbStats(args)
 	default:
 		Usage()
 	}

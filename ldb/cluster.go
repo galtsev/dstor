@@ -8,7 +8,7 @@ import (
 )
 
 type LeveldbCluster struct {
-	backends    []pimco.Backend
+	backends    []*DB
 	json        serializer.Serializer
 	partitioner func(string) int32
 }
@@ -37,6 +37,10 @@ func (srv *LeveldbCluster) AddSample(sample *model.Sample) {
 
 func (srv *LeveldbCluster) Report(tag string, start, stop time.Time) []pimco.ReportLine {
 	return srv.backends[srv.partitioner(tag)].Report(tag, start, stop)
+}
+
+func (srv *LeveldbCluster) Backends() []*DB {
+	return srv.backends
 }
 
 func init() {

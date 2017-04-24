@@ -27,6 +27,17 @@ func cff(ttl time.Duration) func() func(key, value []byte) bool {
 	}
 }
 
+func cffTmp(oldTime time.Time) func() func(key, value []byte) bool {
+	return func() func(key, value []byte) bool {
+		old := uint64(oldTime.UnixNano())
+		return func(key, value []byte) bool {
+			ts := BigEndian.Uint64(key[4:])
+			res := ts > old
+			return res
+		}
+	}
+}
+
 var BigEndian = binary.BigEndian
 
 type DB struct {
@@ -37,8 +48,13 @@ type DB struct {
 	writer   *pimco.BatchWriter
 }
 
+func (db *DB) GetDB() *leveldb.DB {
+	return db.db
+}
+
 func Open(cfg pimco.LeveldbConfig, batchConfig pimco.BatchConfig, partition int32) *DB {
-	ttl, err := time.ParseDuration(cfg.TTL)
+	//ttl, err := time.ParseDuration(cfg.TTL)
+	old, err := time.Parse(DATE_FORMAT, cfg.CompactBefore)
 	Check(err)
 	opts := opt.Options{
 		WriteBuffer:                   cfg.Opts.WriteBufferMb * opt.MiB,
@@ -47,7 +63,7 @@ func Open(cfg pimco.LeveldbConfig, batchConfig pimco.BatchConfig, partition int3
 		CompactionTotalSizeMultiplier: cfg.Opts.CompactionTotalSizeMultiplier,
 		WriteL0SlowdownTrigger:        cfg.Opts.WriteL0SlowdownTrigger,
 		WriteL0PauseTrigger:           cfg.Opts.WriteL0PauseTrigger,
-		CompactionFilterFactory:       opt.CompactionFilterFactory(cff(ttl)),
+		CompactionFilterFactory:       opt.CompactionFilterFactory(cffTmp(old)),
 	}
 	partitionPath := fmt.Sprintf("%s/%d", cfg.Path, partition)
 	ldb, err := leveldb.OpenFile(partitionPath, &opts)
@@ -95,6 +111,11 @@ func (db *DB) MakeKey(tag string, ts int64) []byte {
 	BigEndian.PutUint32(res[:4], ti)
 	BigEndian.PutUint64(res[4:], uint64(ts))
 	return res[:]
+}
+
+func (db *DB) ParseKey(key []byte) (string, time.Time) {
+	t := BigEndian.Uint64(key[4:])
+	return "", time.Unix(0, int64(t))
 }
 
 func (db *DB) ReportOne(tag string, ts int64) (*model.Sample, bool) {
