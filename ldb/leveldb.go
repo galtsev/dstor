@@ -30,7 +30,7 @@ func (db *DB) GetDB() *leveldb.DB {
 
 func nowFunc(now time.Time) func() time.Time {
 	return func() time.Time {
-		return now
+		return time.Unix(0, pimco.GetLatest()).Add(-time.Duration(24) * time.Hour)
 	}
 }
 

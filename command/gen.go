@@ -14,7 +14,9 @@ func Gen(args []string) {
 	progress := util.NewProgress(100000)
 
 	for gen.Next() {
-		backend.AddSample(gen.Sample())
+		sample := gen.Sample()
+		backend.AddSample(sample)
+		pimco.SetLatest(sample.TS)
 		progress.Step()
 	}
 	backend.Close()
