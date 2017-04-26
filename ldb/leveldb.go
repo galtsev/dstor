@@ -14,30 +14,6 @@ import (
 	"time"
 )
 
-func cff(ttl time.Duration) func() func(key, value []byte) bool {
-	return func() func(key, value []byte) bool {
-		pp := time.Now().Add(-ttl)
-		log.Println("compaction: remove samples older than", pp)
-		old := uint64(pp.UnixNano())
-		return func(key, value []byte) bool {
-			ts := BigEndian.Uint64(key[4:])
-			res := ts > old
-			return res
-		}
-	}
-}
-
-func cffTmp(oldTime time.Time) func() func(key, value []byte) bool {
-	return func() func(key, value []byte) bool {
-		old := uint64(oldTime.UnixNano())
-		return func(key, value []byte) bool {
-			ts := BigEndian.Uint64(key[4:])
-			res := ts > old
-			return res
-		}
-	}
-}
-
 var BigEndian = binary.BigEndian
 
 type DB struct {
@@ -52,6 +28,12 @@ func (db *DB) GetDB() *leveldb.DB {
 	return db.db
 }
 
+func nowFunc(now time.Time) func() time.Time {
+	return func() time.Time {
+		return now
+	}
+}
+
 func Open(cfg pimco.LeveldbConfig, batchConfig pimco.BatchConfig, partition int32) *DB {
 	//ttl, err := time.ParseDuration(cfg.TTL)
 	old, err := time.Parse(DATE_FORMAT, cfg.CompactBefore)
@@ -63,7 +45,7 @@ func Open(cfg pimco.LeveldbConfig, batchConfig pimco.BatchConfig, partition int3
 		CompactionTotalSizeMultiplier: cfg.Opts.CompactionTotalSizeMultiplier,
 		WriteL0SlowdownTrigger:        cfg.Opts.WriteL0SlowdownTrigger,
 		WriteL0PauseTrigger:           cfg.Opts.WriteL0PauseTrigger,
-		CompactionFilterFactory:       opt.CompactionFilterFactory(cffTmp(old)),
+		ExpireBefore:                  nowFunc(old),
 	}
 	partitionPath := fmt.Sprintf("%s/%d", cfg.Path, partition)
 	ldb, err := leveldb.OpenFile(partitionPath, &opts)

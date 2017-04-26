@@ -366,7 +366,13 @@ type tableCompactionBuilder struct {
 	minSeq    uint64
 	strict    bool
 	tableSize int
-	filter    func(key, value []byte) bool
+
+	// TTL related
+	// drop records with key time older than oldTime
+	// oldTime=0 disable ttl
+	oldTime int64
+	// latest key time encountered in this table
+	latest int64
 
 	tw *tWriter
 }
@@ -394,11 +400,17 @@ func (b *tableCompactionBuilder) appendKV(key, value []byte) error {
 	}
 
 	// Write key/value into table.
-	if b.filter == nil || b.filter(key, value) {
+	if b.oldTime == 0 {
 		return b.tw.append(key, value)
-	} else {
-		return nil
 	}
+	kt := keyTime(internalKey(key).ukey())
+	if kt > b.oldTime {
+		if kt > b.latest {
+			b.latest = kt
+		}
+		return b.tw.append(key, value)
+	}
+	return nil
 }
 
 func (b *tableCompactionBuilder) needFlush() bool {
@@ -410,9 +422,10 @@ func (b *tableCompactionBuilder) flush() error {
 	if err != nil {
 		return err
 	}
+	t.latest = b.latest
 	b.rec.addTableFile(b.c.sourceLevel+1, t)
 	b.stat1.write += t.size
-	b.s.logf("table@build created L%d@%d N·%d S·%s %q:%q", b.c.sourceLevel+1, t.fd.Num, b.tw.tw.EntriesLen(), shortenb(int(t.size)), t.imin, t.imax)
+	b.s.logf("table@build created L%d@%d N·%d S·%s %q:%q %d", b.c.sourceLevel+1, t.fd.Num, b.tw.tw.EntriesLen(), shortenb(int(t.size)), t.imin, t.imax, t.latest)
 	b.tw = nil
 	return nil
 }
@@ -544,16 +557,24 @@ func (b *tableCompactionBuilder) revert() error {
 
 func (db *DB) tableCompaction(c *compaction, noTrivial bool) {
 	defer c.release()
+	oldTime := db.s.o.Options.GetExpireBefore()
 
 	rec := &sessionRecord{}
 	rec.addCompPtr(c.sourceLevel, c.imax)
 
 	if !noTrivial && c.trivial() {
+		var cname string
 		t := c.levels[0][0]
-		db.logf("table@move L%d@%d -> L%d", c.sourceLevel, t.fd.Num, c.sourceLevel+1)
-		rec.delTable(c.sourceLevel, t.fd.Num)
-		rec.addTableFile(c.sourceLevel+1, t)
-		db.compactionCommit("table-move", rec)
+		if oldTime != 0 && t.latest < oldTime {
+			rec.delTable(c.sourceLevel, t.fd.Num)
+			cname = "table-delete"
+		} else {
+			db.logf("table@move L%d@%d -> L%d", c.sourceLevel, t.fd.Num, c.sourceLevel+1)
+			rec.delTable(c.sourceLevel, t.fd.Num)
+			rec.addTableFile(c.sourceLevel+1, t)
+			cname = "table-move"
+		}
+		db.compactionCommit(cname, rec)
 		return
 	}
 
@@ -578,7 +599,7 @@ func (db *DB) tableCompaction(c *compaction, noTrivial bool) {
 		minSeq:    minSeq,
 		strict:    db.s.o.GetStrict(opt.StrictCompaction),
 		tableSize: db.s.o.GetCompactionTableSize(c.sourceLevel + 1),
-		filter:    db.s.o.GetCompactionFilter(),
+		oldTime:   db.s.o.Options.GetExpireBefore(),
 	}
 	db.compactionTransact("table@build", b)
 

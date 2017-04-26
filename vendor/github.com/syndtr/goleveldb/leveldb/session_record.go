@@ -40,11 +40,12 @@ type cpRecord struct {
 }
 
 type atRecord struct {
-	level int
-	num   int64
-	size  int64
-	imin  internalKey
-	imax  internalKey
+	level  int
+	num    int64
+	size   int64
+	imin   internalKey
+	imax   internalKey
+	latest int64
 }
 
 type dtRecord struct {
@@ -108,11 +109,16 @@ func (p *sessionRecord) resetCompPtrs() {
 
 func (p *sessionRecord) addTable(level int, num, size int64, imin, imax internalKey) {
 	p.hasRec |= 1 << recAddTable
-	p.addedTables = append(p.addedTables, atRecord{level, num, size, imin, imax})
+	p.addedTables = append(p.addedTables, atRecord{level, num, size, imin, imax, 0})
+}
+
+func (p *sessionRecord) addTable2(level int, num, size int64, imin, imax internalKey, latest int64) {
+	p.hasRec |= 1 << recAddTable
+	p.addedTables = append(p.addedTables, atRecord{level, num, size, imin, imax, latest})
 }
 
 func (p *sessionRecord) addTableFile(level int, t *tFile) {
-	p.addTable(level, t.fd.Num, t.size, t.imin, t.imax)
+	p.addTable2(level, t.fd.Num, t.size, t.imin, t.imax, t.latest)
 }
 
 func (p *sessionRecord) resetAddedTables() {
@@ -189,6 +195,7 @@ func (p *sessionRecord) encode(w io.Writer) error {
 		p.putUvarint(w, uint64(r.level))
 		p.putVarint(w, r.num)
 		p.putVarint(w, r.size)
+		p.putVarint(w, r.latest)
 		p.putBytes(w, r.imin)
 		p.putBytes(w, r.imax)
 	}
@@ -305,10 +312,11 @@ func (p *sessionRecord) decode(r io.Reader) error {
 			level := p.readLevel("add-table.level", br)
 			num := p.readVarint("add-table.num", br)
 			size := p.readVarint("add-table.size", br)
+			latest := p.readVarint("add-table.latest", br)
 			imin := p.readBytes("add-table.imin", br)
 			imax := p.readBytes("add-table.imax", br)
 			if p.err == nil {
-				p.addTable(level, num, size, imin, imax)
+				p.addTable2(level, num, size, imin, imax, latest)
 			}
 		case recDelTable:
 			level := p.readLevel("del-table.level", br)
