@@ -7,7 +7,9 @@ import (
 var latest int64
 
 func SetLatest(ts int64) {
-	atomic.StoreInt64(&latest, ts)
+	if ts > GetLatest() {
+		atomic.StoreInt64(&latest, ts)
+	}
 }
 
 func GetLatest() int64 {

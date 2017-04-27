@@ -16,7 +16,6 @@ func Gen(args []string) {
 	for gen.Next() {
 		sample := gen.Sample()
 		backend.AddSample(sample)
-		pimco.SetLatest(sample.TS)
 		progress.Step()
 	}
 	backend.Close()

@@ -10,7 +10,6 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"log"
 	"time"
 )
 
@@ -19,9 +18,15 @@ var BigEndian = binary.BigEndian
 type DB struct {
 	db       *leveldb.DB
 	szr      serializer.Serializer
-	tagIndex map[string]uint32
+	tagIndex *TagIndex
 	batch    leveldb.Batch
 	writer   *pimco.BatchWriter
+}
+
+type Options struct {
+	Leveldb  pimco.LeveldbConfig
+	Batch    pimco.BatchConfig
+	TagIndex *TagIndex
 }
 
 func (db *DB) GetDB() *leveldb.DB {
@@ -34,32 +39,28 @@ func nowFunc(now time.Time) func() time.Time {
 	}
 }
 
-func Open(cfg pimco.LeveldbConfig, batchConfig pimco.BatchConfig, partition int32) *DB {
-	//ttl, err := time.ParseDuration(cfg.TTL)
-	old, err := time.Parse(DATE_FORMAT, cfg.CompactBefore)
+func Open(partition int32, opts *Options) *DB {
+	o := opts.Leveldb.Opts
+	batchConfig := opts.Batch
+	old, err := time.Parse(DATE_FORMAT, opts.Leveldb.CompactBefore)
 	Check(err)
-	opts := opt.Options{
-		WriteBuffer:                   cfg.Opts.WriteBufferMb * opt.MiB,
-		CompactionTableSize:           cfg.Opts.CompactionTableSizeMb * opt.MiB,
-		CompactionTotalSize:           cfg.Opts.CompactionTotalSizeMb * opt.MiB,
-		CompactionTotalSizeMultiplier: cfg.Opts.CompactionTotalSizeMultiplier,
-		WriteL0SlowdownTrigger:        cfg.Opts.WriteL0SlowdownTrigger,
-		WriteL0PauseTrigger:           cfg.Opts.WriteL0PauseTrigger,
+	lopts := opt.Options{
+		WriteBuffer:                   o.WriteBufferMb * opt.MiB,
+		CompactionTableSize:           o.CompactionTableSizeMb * opt.MiB,
+		CompactionTotalSize:           o.CompactionTotalSizeMb * opt.MiB,
+		CompactionTotalSizeMultiplier: o.CompactionTotalSizeMultiplier,
+		WriteL0SlowdownTrigger:        o.WriteL0SlowdownTrigger,
+		WriteL0PauseTrigger:           o.WriteL0PauseTrigger,
 		ExpireBefore:                  nowFunc(old),
 	}
-	partitionPath := fmt.Sprintf("%s/%d", cfg.Path, partition)
-	ldb, err := leveldb.OpenFile(partitionPath, &opts)
+	partitionPath := fmt.Sprintf("%s/%d", opts.Leveldb.Path, partition)
+	ldb, err := leveldb.OpenFile(partitionPath, &lopts)
 	Check(err)
 	db := DB{
-		db: ldb,
+		db:       ldb,
+		szr:      serializer.MsgPackSerializer{},
+		tagIndex: opts.TagIndex,
 	}
-	// TODO implement real map
-	db.tagIndex = make(map[string]uint32)
-	for i := 0; i < 2000; i++ {
-		tag := fmt.Sprintf("tag%d", i)
-		db.tagIndex[tag] = uint32(i)
-	}
-	db.szr = serializer.NewSerializer("msgp")
 	db.writer = pimco.NewWriter(&db, batchConfig)
 	return &db
 }
@@ -86,11 +87,8 @@ func (db *DB) AddSample(sample *model.Sample) {
 
 func (db *DB) MakeKey(tag string, ts int64) []byte {
 	var res [12]byte
-	ti, ok := db.tagIndex[tag]
-	if !ok {
-		log.Panicf("Undefined tag:%s", tag)
-	}
-	BigEndian.PutUint32(res[:4], ti)
+	ti := db.tagIndex.Get(tag)
+	BigEndian.PutUint32(res[:4], uint32(ti))
 	BigEndian.PutUint64(res[4:], uint64(ts))
 	return res[:]
 }
