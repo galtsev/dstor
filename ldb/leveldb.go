@@ -55,7 +55,7 @@ func Open(cfg pimco.LeveldbConfig, batchConfig pimco.BatchConfig, partition int3
 	}
 	// TODO implement real map
 	db.tagIndex = make(map[string]uint32)
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 2000; i++ {
 		tag := fmt.Sprintf("tag%d", i)
 		db.tagIndex[tag] = uint32(i)
 	}

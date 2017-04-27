@@ -226,10 +226,10 @@
 			"revisionTime": "2016-09-25T22:06:09Z"
 		},
 		{
-			"checksumSHA1": "jXqisjwXRSFWySfHdAV9zp1ITzI=",
+			"checksumSHA1": "VLVi6dssEElMCeV7+E63XhsYiiU=",
 			"path": "github.com/syndtr/goleveldb/leveldb",
-			"revision": "6f1f65c57b0b3eb6616787039dccc873ca97a2dd",
-			"revisionTime": "2017-04-26T14:51:15Z"
+			"revision": "9601f7f800fe7ca75d17d03337164a88820a66a5",
+			"revisionTime": "2017-04-26T16:35:38Z"
 		},
 		{
 			"checksumSHA1": "EKIow7XkgNdWvR/982ffIZxKG8Y=",
