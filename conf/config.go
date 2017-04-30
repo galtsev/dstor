@@ -48,10 +48,11 @@ type ClientConfig struct {
 }
 
 type ServerConfig struct {
-	Addr     string
-	Storage  string
-	Reporter string
-	Backends map[string]string
+	Addr       string
+	Storage    string
+	Reporter   string
+	Backends   map[string]string
+	Partitions []int32
 }
 
 type LeveldbOptions struct {

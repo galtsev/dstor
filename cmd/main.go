@@ -52,8 +52,6 @@ func main() {
 		//command.QueryFlux(args)
 	case "query-reporter":
 		timeIt(func() { command.QueryReporter(args) })
-	case "recept":
-		command.Recept2Kafka(args)
 	// consume topic from kafka, write to influx
 	case "kafka2flux":
 		timeIt(func() {

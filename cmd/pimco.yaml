@@ -39,7 +39,6 @@ server:
 #   storage: storage
 #   reporter: reporter
 
-
 client:
   batch_size: 10
 leveldb:

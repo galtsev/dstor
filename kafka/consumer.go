@@ -7,7 +7,6 @@ import (
 	"dan/pimco/model"
 	"dan/pimco/serializer"
 	"github.com/Shopify/sarama"
-	"log"
 )
 
 func ConsumePartition(cfg conf.KafkaConfig, partition int32, oneShot bool) chan model.Sample {
@@ -47,12 +46,7 @@ func ConsumePartition(cfg conf.KafkaConfig, partition int32, oneShot bool) chan 
 }
 
 func PartitionLoader(cfg conf.Config, partition int32, db pimco.Storage) {
-	cnt := 0
 	for sample := range ConsumePartition(cfg.Kafka, partition, false) {
 		db.AddSample(&sample)
-		cnt++
-		if cnt%10000 == 0 {
-			log.Printf("read %d samples", cnt)
-		}
 	}
 }
