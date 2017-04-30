@@ -13,6 +13,7 @@ type InfluxConfig struct {
 	URL         string
 	Database    string
 	Measurement string
+	Batch       BatchConfig
 }
 
 type KafkaConfig struct {
@@ -68,6 +69,7 @@ type LeveldbConfig struct {
 	Opts          LeveldbOptions
 	TTL           string // sample would be removed on compaction after this period. format as time.Duration.Parse, eg. 600s
 	CompactBefore string `yaml:"compact_before"`
+	Batch         BatchConfig
 }
 
 type MetricsConfig struct {
@@ -82,7 +84,6 @@ type BatchConfig struct {
 }
 
 type Config struct {
-	Batch    BatchConfig
 	Influx   InfluxConfig
 	Kafka    KafkaConfig
 	Gen      GenConfig
@@ -99,29 +100,30 @@ func (cfg Config) String() string {
 		cfg.Influx.URL,
 		cfg.Influx.Database,
 		cfg.Influx.Measurement,
-		cfg.Batch.BatchSize,
 		cfg.Gen.Count,
 		cfg.FilePath,
 	)
 }
 
 func NewConfig() *Config {
+	batch := BatchConfig{
+		BatchSize:  1000,
+		FlushDelay: 50,
+	}
 	cfg := Config{
-		Batch: BatchConfig{
-			BatchSize:  1000,
-			FlushDelay: 50, //ms
-		},
 		Kafka: KafkaConfig{
 			Hosts:         []string{"192.168.0.2:9092"},
 			Topic:         "test",
 			NumPartitions: 4,
 			Partitions:    []int32{0},
 			Serializer:    "msgp",
+			Batch:         batch,
 		},
 		Influx: InfluxConfig{
 			URL:         "http://192.168.0.2:8086",
 			Database:    "test",
 			Measurement: "ms",
+			Batch:       batch,
 		},
 		Gen: GenConfig{
 			Start:   "2017-04-06 00:00",
@@ -157,6 +159,7 @@ func NewConfig() *Config {
 				WriteL0SlowdownTrigger:        4,
 				WriteL0PauseTrigger:           12,
 			},
+			Batch: batch,
 		},
 		OneShot: false,
 	}
@@ -165,7 +168,8 @@ func NewConfig() *Config {
 }
 
 func LoadConfig(args ...string) Config {
-	return LoadConfigEx(nil, args...)
+	fs := flag.NewFlagSet("base", flag.ExitOnError)
+	return LoadConfigEx(fs, args...)
 }
 
 func LoadConfigEx(fs *flag.FlagSet, args ...string) Config {
@@ -173,11 +177,6 @@ func LoadConfigEx(fs *flag.FlagSet, args ...string) Config {
 	data, err := ioutil.ReadFile("pimco.yaml")
 	Check(err)
 	Check(yaml.Unmarshal(data, cfg))
-	if fs == nil {
-		fs = flag.NewFlagSet("base", flag.ExitOnError)
-	}
-	fs.IntVar(&cfg.Batch.BatchSize, "bs", cfg.Batch.BatchSize, "batch size")
-	fs.IntVar(&cfg.Gen.Count, "count", cfg.Gen.Count, "Count")
 	fs.Parse(args)
 	return *cfg
 }

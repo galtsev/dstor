@@ -35,7 +35,7 @@ func nowFunc(now time.Time) func() time.Time {
 	}
 }
 
-func Open(cfg conf.LeveldbConfig, batchConfig conf.BatchConfig, partition int32) *DB {
+func Open(cfg conf.LeveldbConfig, partition int32) *DB {
 	//ttl, err := time.ParseDuration(cfg.TTL)
 	old, err := time.Parse(DATE_FORMAT, cfg.CompactBefore)
 	Check(err)
@@ -61,7 +61,7 @@ func Open(cfg conf.LeveldbConfig, batchConfig conf.BatchConfig, partition int32)
 		db.tagIndex[tag] = uint32(i)
 	}
 	db.szr = serializer.NewSerializer("msgp")
-	db.writer = pimco.NewWriter(&db, batchConfig)
+	db.writer = pimco.NewWriter(&db, cfg.Batch)
 	return &db
 }
 

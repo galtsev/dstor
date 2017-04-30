@@ -17,7 +17,7 @@ func NewCluster(cfg conf.Config) *LeveldbCluster {
 		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
 	}
 	for p := 0; p < cfg.Kafka.NumPartitions; p++ {
-		db := Open(cfg.Leveldb, cfg.Batch, int32(p))
+		db := Open(cfg.Leveldb, int32(p))
 		server.backends = append(server.backends, db)
 	}
 	return &server

@@ -12,10 +12,9 @@ import (
 )
 
 func kafkaSaveLoop(cfg conf.Config, partition int32, ch chan model.Sample) {
-	kafkaWriter := kafka.NewWriter(cfg.Kafka, partition)
-	w := pimco.NewWriter(kafkaWriter, cfg.Batch)
+	w := kafka.NewWriter(cfg.Kafka, partition)
 	for sample := range ch {
-		w.Write(&sample)
+		w.AddSample(&sample)
 	}
 	w.Close()
 }

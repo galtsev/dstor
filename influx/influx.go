@@ -19,7 +19,7 @@ type Influx struct {
 	batch    client.BatchPoints
 }
 
-func New(cfg conf.InfluxConfig, batchConfig conf.BatchConfig) *Influx {
+func New(cfg conf.InfluxConfig) *Influx {
 	w := Influx{
 		bpConfig: client.BatchPointsConfig{Database: cfg.Database},
 		database: cfg.Database,
@@ -27,7 +27,7 @@ func New(cfg conf.InfluxConfig, batchConfig conf.BatchConfig) *Influx {
 	conn, err := client.NewHTTPClient(client.HTTPConfig{Addr: cfg.URL})
 	Check(err)
 	w.conn = conn
-	w.writer = pimco.NewWriter(&w, batchConfig)
+	w.writer = pimco.NewWriter(&w, cfg.Batch)
 	return &w
 }
 
@@ -106,6 +106,6 @@ func AddSample(sample *model.Sample, batch client.BatchPoints) {
 
 func init() {
 	pimco.RegisterBackend("influxdb", func(cfg conf.Config) pimco.Backend {
-		return New(cfg.Influx, cfg.Batch)
+		return New(cfg.Influx)
 	})
 }
