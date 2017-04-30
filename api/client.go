@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"dan/pimco"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/phttp"
 	"dan/pimco/serializer"
@@ -22,7 +23,7 @@ type Client struct {
 	szr       serializer.Serializer
 }
 
-func NewClient(cfg pimco.ClientConfig) *Client {
+func NewClient(cfg conf.ClientConfig) *Client {
 	client := Client{
 		writeURL:  fmt.Sprintf("http://%s/write", cfg.Host),
 		reportURL: fmt.Sprintf("http://%s/report", cfg.Host),

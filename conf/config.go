@@ -1,4 +1,4 @@
-package pimco
+package conf
 
 import (
 	. "dan/pimco/base"

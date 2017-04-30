@@ -1,13 +1,13 @@
 package command
 
 import (
-	"dan/pimco"
+	"dan/pimco/conf"
 	"dan/pimco/kafka"
 	"fmt"
 )
 
 func TopicStats(args []string) {
-	cfg := pimco.LoadConfig(args...)
+	cfg := conf.LoadConfig(args...)
 	fmt.Println(cfg)
 	cnt := 0
 	tags := make(map[string]int)

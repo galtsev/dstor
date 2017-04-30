@@ -1,8 +1,8 @@
 package command
 
 import (
-	"dan/pimco"
 	"dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/ldb"
 	"dan/pimco/model"
 	"dan/pimco/serializer"
@@ -74,7 +74,7 @@ func showStats(stats *stats) {
 }
 
 func LeveldbStats(args []string) {
-	cfg := pimco.LoadConfig(args...)
+	cfg := conf.LoadConfig(args...)
 	fmt.Println(cfg)
 	srv := ldb.NewCluster(cfg)
 	stats := stats{

@@ -3,13 +3,14 @@ package kafka
 import (
 	"dan/pimco"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/serializer"
 	"github.com/Shopify/sarama"
 	"log"
 )
 
-func ConsumePartition(cfg pimco.KafkaConfig, partition int32, oneShot bool) chan model.Sample {
+func ConsumePartition(cfg conf.KafkaConfig, partition int32, oneShot bool) chan model.Sample {
 	ch := make(chan model.Sample, 1000)
 	conf := sarama.NewConfig()
 	var finalOffset int64
@@ -45,7 +46,7 @@ func ConsumePartition(cfg pimco.KafkaConfig, partition int32, oneShot bool) chan
 	return ch
 }
 
-func PartitionLoader(cfg pimco.Config, partition int32, db pimco.Storage) {
+func PartitionLoader(cfg conf.Config, partition int32, db pimco.Storage) {
 	cnt := 0
 	for sample := range ConsumePartition(cfg.Kafka, partition, false) {
 		db.AddSample(&sample)

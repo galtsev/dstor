@@ -2,6 +2,7 @@ package command
 
 import (
 	"dan/pimco"
+	"dan/pimco/conf"
 	"dan/pimco/util"
 	"flag"
 	"fmt"
@@ -10,7 +11,7 @@ import (
 func Gen(args []string) {
 	fs := flag.NewFlagSet("gen", flag.ExitOnError)
 	path := fs.String("path", "", "Output file name")
-	cfg := pimco.LoadConfigEx(fs, args...)
+	cfg := conf.LoadConfigEx(fs, args...)
 	if *path != "" {
 		cfg.FilePath = *path
 	}

@@ -3,6 +3,7 @@ package command
 import (
 	"dan/pimco"
 	"dan/pimco/api"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/util"
 	"flag"
@@ -12,7 +13,7 @@ import (
 	"time"
 )
 
-func pwork(cfg pimco.ClientConfig, ch chan model.Sample) {
+func pwork(cfg conf.ClientConfig, ch chan model.Sample) {
 	client := api.NewClient(cfg)
 	currentBatchSize := 0
 	for sample := range ch {
@@ -66,7 +67,7 @@ func Client(args []string) {
 	fs := flag.NewFlagSet("client", flag.ExitOnError)
 	concurrency := fs.Int("c", 1, "Concurrency")
 	pattern := fs.String("pattern", "10:1", "load pattern, list of steps in form <rate k*samples/second>:<step duration seconds>, separated by spaces")
-	cfg := pimco.LoadConfigEx(fs, args...)
+	cfg := conf.LoadConfigEx(fs, args...)
 	fmt.Println(cfg)
 	ch := make(chan model.Sample, 100)
 	mediator := make(chan int, 100)

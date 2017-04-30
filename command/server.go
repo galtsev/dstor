@@ -3,6 +3,7 @@ package command
 import (
 	"dan/pimco"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/phttp"
 	"dan/pimco/prom"
@@ -22,7 +23,7 @@ type Server struct {
 	partitioner func(string) int32
 }
 
-func NewServer(cfg pimco.Config) *Server {
+func NewServer(cfg conf.Config) *Server {
 	server := Server{
 		json:        serializer.NewSerializer("easyjson"),
 		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
@@ -80,7 +81,7 @@ func (srv *Server) handleReport(ctx *fasthttp.RequestCtx) {
 func Serve(args []string) {
 	fs := flag.NewFlagSet("server", flag.ExitOnError)
 	backend := fs.String("backend", "leveldb", "Backend type (leveldb | influxdb | memdb)")
-	cfg := pimco.LoadConfigEx(fs, args...)
+	cfg := conf.LoadConfigEx(fs, args...)
 	cfg.Server.Backend = *backend
 	log.Println(cfg)
 	srv := NewServer(cfg)

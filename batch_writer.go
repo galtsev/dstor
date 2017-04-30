@@ -1,6 +1,7 @@
 package pimco
 
 import (
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/prom"
 	"log"
@@ -28,7 +29,7 @@ type BatchWriter struct {
 	verbose    bool
 }
 
-func NewWriter(out Writer, cfg BatchConfig) *BatchWriter {
+func NewWriter(out Writer, cfg conf.BatchConfig) *BatchWriter {
 	w := BatchWriter{
 		out:        out,
 		ch:         make(chan trackedSample, 1000),

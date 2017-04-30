@@ -3,6 +3,7 @@ package pimco
 import (
 	"bufio"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/serializer"
 	"io"
@@ -19,7 +20,7 @@ type FileStorage struct {
 	wg  sync.WaitGroup
 }
 
-func NewFileStorage(cfg Config) *FileStorage {
+func NewFileStorage(cfg conf.Config) *FileStorage {
 	f, err := os.Create(cfg.FilePath)
 	Check(err)
 	fs := &FileStorage{
@@ -54,7 +55,7 @@ func (fs *FileStorage) Close() {
 }
 
 func init() {
-	RegisterBackend("file", func(cfg Config) Backend {
+	RegisterBackend("file", func(cfg conf.Config) Backend {
 		return NewFileStorage(cfg)
 	})
 }

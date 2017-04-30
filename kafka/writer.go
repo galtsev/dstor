@@ -1,8 +1,8 @@
 package kafka
 
 import (
-	"dan/pimco"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/serializer"
 	"github.com/Shopify/sarama"
@@ -16,7 +16,7 @@ type Writer struct {
 	szr       serializer.Serializer
 }
 
-func NewWriter(cfg pimco.KafkaConfig, partition int32) *Writer {
+func NewWriter(cfg conf.KafkaConfig, partition int32) *Writer {
 	w := Writer{
 		topic:     cfg.Topic,
 		partition: partition,

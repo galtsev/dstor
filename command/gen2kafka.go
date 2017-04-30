@@ -5,13 +5,14 @@ package command
 
 import (
 	"dan/pimco"
+	"dan/pimco/conf"
 	"dan/pimco/kafka"
 	"dan/pimco/util"
 	"fmt"
 )
 
 func Run4(args []string) {
-	cfg := pimco.LoadConfig(args...)
+	cfg := conf.LoadConfig(args...)
 	fmt.Println(cfg)
 	kafkaWriter := kafka.NewWriter(cfg.Kafka, int32(0))
 	w := pimco.NewWriter(kafkaWriter, cfg.Batch)

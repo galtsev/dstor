@@ -3,6 +3,7 @@ package command
 import (
 	"dan/pimco"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/kafka"
 	"dan/pimco/model"
 	"dan/pimco/serializer"
@@ -10,7 +11,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func kafkaSaveLoop(cfg pimco.Config, partition int32, ch chan model.Sample) {
+func kafkaSaveLoop(cfg conf.Config, partition int32, ch chan model.Sample) {
 	kafkaWriter := kafka.NewWriter(cfg.Kafka, partition)
 	w := pimco.NewWriter(kafkaWriter, cfg.Batch)
 	for sample := range ch {
@@ -38,7 +39,7 @@ func makeHandler(channels []chan model.Sample) fasthttp.RequestHandler {
 }
 
 func Recept2Kafka(args []string) {
-	cfg := pimco.LoadConfig(args...)
+	cfg := conf.LoadConfig(args...)
 	fmt.Println(cfg)
 	// receptor operate with all partitions
 	saveChannels := make([]chan model.Sample, cfg.Kafka.NumPartitions)

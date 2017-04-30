@@ -1,13 +1,14 @@
 package pimco
 
 import (
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"log"
 	"time"
 )
 
 var (
-	backendRegistry = make(map[string]func(cfg Config) Backend)
+	backendRegistry = make(map[string]func(cfg conf.Config) Backend)
 )
 
 type ReportLine struct {
@@ -37,12 +38,12 @@ type Backend interface {
 	Reporter
 }
 
-func RegisterBackend(name string, factory func(cfg Config) Backend) {
+func RegisterBackend(name string, factory func(cfg conf.Config) Backend) {
 	log.Printf("Registered backend %s", name)
 	backendRegistry[name] = factory
 }
 
-func MakeBackend(name string, cfg Config) Backend {
+func MakeBackend(name string, cfg conf.Config) Backend {
 	return backendRegistry[name](cfg)
 }
 

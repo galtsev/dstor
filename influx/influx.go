@@ -3,6 +3,7 @@ package influx
 import (
 	"dan/pimco"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"encoding/json"
 	"fmt"
@@ -18,7 +19,7 @@ type Influx struct {
 	batch    client.BatchPoints
 }
 
-func New(cfg pimco.InfluxConfig, batchConfig pimco.BatchConfig) *Influx {
+func New(cfg conf.InfluxConfig, batchConfig conf.BatchConfig) *Influx {
 	w := Influx{
 		bpConfig: client.BatchPointsConfig{Database: cfg.Database},
 		database: cfg.Database,
@@ -104,7 +105,7 @@ func AddSample(sample *model.Sample, batch client.BatchPoints) {
 }
 
 func init() {
-	pimco.RegisterBackend("influxdb", func(cfg pimco.Config) pimco.Backend {
+	pimco.RegisterBackend("influxdb", func(cfg conf.Config) pimco.Backend {
 		return New(cfg.Influx, cfg.Batch)
 	})
 }

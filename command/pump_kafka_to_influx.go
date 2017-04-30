@@ -5,7 +5,7 @@
 package command
 
 import (
-	"dan/pimco"
+	"dan/pimco/conf"
 	"dan/pimco/influx"
 	"dan/pimco/kafka"
 	"log"
@@ -14,7 +14,7 @@ import (
 
 func PumpKafka2Influx(args []string) {
 	var wg sync.WaitGroup
-	cfg := pimco.LoadConfig(args...)
+	cfg := conf.LoadConfig(args...)
 	log.Println(cfg)
 	for _, partition := range cfg.Kafka.Partitions {
 		wg.Add(1)
@@ -27,7 +27,7 @@ func PumpKafka2Influx(args []string) {
 }
 
 // TODO Graceful cancelation
-func consumePartition(cfg pimco.Config, partition int32) {
+func consumePartition(cfg conf.Config, partition int32) {
 	backend := influx.New(cfg.Influx, cfg.Batch)
 
 	cnt := 0

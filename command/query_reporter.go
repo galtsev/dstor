@@ -1,9 +1,9 @@
 package command
 
 import (
-	"dan/pimco"
 	"dan/pimco/api"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"flag"
 	"fmt"
 	"math"
@@ -17,7 +17,7 @@ func QueryReporter(args []string) {
 	endStr := fs.String("end", "", "End of reporting period, YYYY-MM-DD HH:MM")
 	bench := fs.Int("bench", 0, "Run N times, report accumulated time")
 	tag := fs.String("tag", "", "tag to report")
-	cfg := pimco.LoadConfigEx(fs, args...)
+	cfg := conf.LoadConfigEx(fs, args...)
 	fmt.Println(cfg)
 	fmt.Printf("Report for period from %s to %s\n", *startStr, *endStr)
 	start, err := time.Parse(DATE_FORMAT, *startStr)

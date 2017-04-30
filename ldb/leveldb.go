@@ -3,6 +3,7 @@ package ldb
 import (
 	"dan/pimco"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/serializer"
 	"encoding/binary"
@@ -34,7 +35,7 @@ func nowFunc(now time.Time) func() time.Time {
 	}
 }
 
-func Open(cfg pimco.LeveldbConfig, batchConfig pimco.BatchConfig, partition int32) *DB {
+func Open(cfg conf.LeveldbConfig, batchConfig conf.BatchConfig, partition int32) *DB {
 	//ttl, err := time.ParseDuration(cfg.TTL)
 	old, err := time.Parse(DATE_FORMAT, cfg.CompactBefore)
 	Check(err)
