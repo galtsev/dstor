@@ -16,9 +16,30 @@ gen:
   end: 2017-04-16 00:00
   count: 20000000
   tags: 2000
+  backend: file
+#leveldb-standalone
 server:
   addr: localhost:8787
-  backend: file
+  backends:
+    leveldb: leveldb
+  storage: leveldb
+  reporter: leveldb
+# # leveldb-node
+# server:
+#   addr: localhost:8787
+#   backends:
+#     storage: leveldb
+#   storage: storage
+# # leveldb-proxy
+# server:
+#   addr: localhost:8787
+#   backends:
+#     storage: kafka
+#     reporter: remote
+#   storage: storage
+#   reporter: reporter
+
+
 client:
   batch_size: 10
 leveldb:
