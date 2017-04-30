@@ -4,19 +4,16 @@ import (
 	"dan/pimco"
 	"dan/pimco/conf"
 	"dan/pimco/model"
-	"dan/pimco/serializer"
 	"time"
 )
 
 type LeveldbCluster struct {
 	backends    []*DB
-	json        serializer.Serializer
 	partitioner func(string) int32
 }
 
 func NewCluster(cfg conf.Config) *LeveldbCluster {
 	server := LeveldbCluster{
-		json:        serializer.NewSerializer("easyjson"),
 		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
 	}
 	for p := 0; p < cfg.Kafka.NumPartitions; p++ {

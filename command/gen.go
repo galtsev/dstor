@@ -16,7 +16,7 @@ func Gen(args []string) {
 		cfg.FilePath = *path
 	}
 	fmt.Println(cfg)
-	backend := pimco.MakeBackend(cfg.Server.Backend, cfg)
+	backend := pimco.MakeBackend(cfg.Gen.Backend, cfg)
 	gen := pimco.NewGenerator(cfg.Gen)
 	progress := util.NewProgress(100000)
 

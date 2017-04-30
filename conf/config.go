@@ -21,14 +21,16 @@ type KafkaConfig struct {
 	NumPartitions int     `yaml:"num_partitions"` // total number of partitions in this topic
 	Partitions    []int32 // partitions to consume
 	Serializer    string
+	Batch         BatchConfig
 }
 
 type GenConfig struct {
-	Mode  string
-	Start string
-	End   string
-	Count int
-	Tags  int // number of tags
+	Mode    string
+	Start   string
+	End     string
+	Count   int
+	Tags    int // number of tags
+	Backend string
 }
 
 func (cfg GenConfig) Period() (start, end time.Time) {
@@ -45,8 +47,10 @@ type ClientConfig struct {
 }
 
 type ServerConfig struct {
-	Addr    string
-	Backend string
+	Addr     string
+	Storage  string
+	Reporter string
+	Backends map[string]string
 }
 
 type LeveldbOptions struct {
@@ -120,14 +124,18 @@ func NewConfig() *Config {
 			Measurement: "ms",
 		},
 		Gen: GenConfig{
-			Start: "2017-04-06 00:00",
-			End:   "2017-04-07 00:00",
-			Count: 10000,
-			Tags:  20,
-			Mode:  "random",
+			Start:   "2017-04-06 00:00",
+			End:     "2017-04-07 00:00",
+			Count:   10000,
+			Tags:    20,
+			Mode:    "random",
+			Backend: "leveldb",
 		},
 		Server: ServerConfig{
-			Addr: "localhost:8787",
+			Addr:     "localhost:8787",
+			Storage:  "leveldb",
+			Reporter: "leveldb",
+			Backends: map[string]string{"leveldb": "leveldb"},
 		},
 		Metrics: MetricsConfig{
 			Addr:       ":8789",

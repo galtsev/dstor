@@ -52,3 +52,9 @@ type FakeReporter struct{}
 func (r FakeReporter) Report(tag string, start, stop time.Time) []ReportLine {
 	return []ReportLine{}
 }
+
+type FakeStorage struct{}
+
+func (s FakeStorage) AddSample(sample *model.Sample) {}
+
+func (s FakeStorage) Close() {}

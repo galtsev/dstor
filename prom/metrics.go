@@ -1,6 +1,7 @@
 package prom
 
 import (
+	"dan/pimco/conf"
 	"github.com/prometheus/client_golang/prometheus"
 	"time"
 )
@@ -36,37 +37,35 @@ var (
 		MaxAge:     time.Second,
 		Objectives: defaultPercentiles,
 	}, []string{"path"})
-	enableHist bool
-	enableSum  bool
+	cfg conf.MetricsConfig
 )
 
-func Setup(hist, sum bool) {
+func Setup(metricsConfig conf.MetricsConfig) {
+	cfg = metricsConfig
 	prometheus.MustRegister(
 		sampleWriteHist,
 		sampleWriteSum,
 		requestTimeHist,
 		requestTimeSum,
 	)
-	enableHist = hist
-	enableSum = sum
 }
 
 func SampleWrite(duration time.Duration) {
 	p := float64(duration) / (1000 * 1000 * 1000)
-	if enableHist {
+	if cfg.EnableHist {
 		sampleWriteHist.Observe(p)
 	}
-	if enableSum {
+	if cfg.EnableSum {
 		sampleWriteSum.Observe(p)
 	}
 }
 
 func RequestTime(path string, duration time.Duration) {
 	p := float64(duration) / (1000 * 1000 * 1000)
-	if enableHist {
+	if cfg.EnableHist {
 		requestTimeHist.WithLabelValues(path).Observe(p)
 	}
-	if enableSum {
+	if cfg.EnableSum {
 		requestTimeSum.WithLabelValues(path).Observe(p)
 	}
 }

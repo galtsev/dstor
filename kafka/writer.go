@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"dan/pimco"
 	. "dan/pimco/base"
 	"dan/pimco/conf"
 	"dan/pimco/model"
@@ -14,6 +15,7 @@ type Writer struct {
 	topic     string
 	partition int32
 	szr       serializer.Serializer
+	writer    *pimco.BatchWriter
 }
 
 func NewWriter(cfg conf.KafkaConfig, partition int32) *Writer {
@@ -22,6 +24,7 @@ func NewWriter(cfg conf.KafkaConfig, partition int32) *Writer {
 		partition: partition,
 		szr:       serializer.NewSerializer(cfg.Serializer),
 	}
+	w.writer = pimco.NewWriter(&w, cfg.Batch)
 	conf := sarama.NewConfig()
 	conf.Producer.Partitioner = sarama.NewManualPartitioner
 	conf.Producer.Return.Successes = true
@@ -47,6 +50,10 @@ func (w *Writer) Flush() {
 		Check(err)
 		w.batch = w.batch[:0]
 	}
+}
+
+func (w *Writer) AddSample(sample *model.Sample) {
+	w.writer.Write(sample)
 }
 
 func (w *Writer) Close() {
