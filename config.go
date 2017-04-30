@@ -78,23 +78,26 @@ type BatchConfig struct {
 }
 
 type Config struct {
-	Batch   BatchConfig
-	Influx  InfluxConfig
-	Kafka   KafkaConfig
-	Gen     GenConfig
-	Server  ServerConfig
-	Client  ClientConfig
-	Metrics MetricsConfig
-	Leveldb LeveldbConfig
-	OneShot bool `yaml:"one_shot"`
+	Batch    BatchConfig
+	Influx   InfluxConfig
+	Kafka    KafkaConfig
+	Gen      GenConfig
+	Server   ServerConfig
+	Client   ClientConfig
+	Metrics  MetricsConfig
+	Leveldb  LeveldbConfig
+	OneShot  bool   `yaml:"one_shot"`
+	FilePath string `yaml:"file_path"`
 }
 
 func (cfg Config) String() string {
-	return fmt.Sprintf("Config<Influx:<URL:%s/%s/%s; BatchSize: %d>; Count: %d>",
+	return fmt.Sprintf("Config<Influx.URL:%s/%s/%s; BatchSize: %d; Gen.Count: %d; FilePath:%s",
 		cfg.Influx.URL,
 		cfg.Influx.Database,
 		cfg.Influx.Measurement,
+		cfg.Batch.BatchSize,
 		cfg.Gen.Count,
+		cfg.FilePath,
 	)
 }
 

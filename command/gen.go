@@ -3,11 +3,17 @@ package command
 import (
 	"dan/pimco"
 	"dan/pimco/util"
+	"flag"
 	"fmt"
 )
 
 func Gen(args []string) {
-	cfg := pimco.LoadConfig(args...)
+	fs := flag.NewFlagSet("gen", flag.ExitOnError)
+	path := fs.String("path", "", "Output file name")
+	cfg := pimco.LoadConfigEx(fs, args...)
+	if *path != "" {
+		cfg.FilePath = *path
+	}
 	fmt.Println(cfg)
 	backend := pimco.MakeBackend(cfg.Server.Backend, cfg)
 	gen := pimco.NewGenerator(cfg.Gen)

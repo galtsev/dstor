@@ -45,3 +45,9 @@ func RegisterBackend(name string, factory func(cfg Config) Backend) {
 func MakeBackend(name string, cfg Config) Backend {
 	return backendRegistry[name](cfg)
 }
+
+type FakeReporter struct{}
+
+func (r FakeReporter) Report(tag string, start, stop time.Time) []ReportLine {
+	return []ReportLine{}
+}
