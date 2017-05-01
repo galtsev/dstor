@@ -51,7 +51,6 @@ type ServerConfig struct {
 	Addr       string
 	Storage    string
 	Reporter   string
-	Backends   map[string]string
 	Partitions []int32
 }
 
@@ -138,7 +137,6 @@ func NewConfig() *Config {
 			Addr:     "localhost:8787",
 			Storage:  "leveldb",
 			Reporter: "leveldb",
-			Backends: map[string]string{"leveldb": "leveldb"},
 		},
 		Metrics: MetricsConfig{
 			Addr:       ":8789",
