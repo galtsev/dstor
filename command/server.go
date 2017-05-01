@@ -3,6 +3,7 @@ package command
 import (
 	. "dan/pimco/base"
 	"dan/pimco/conf"
+	"dan/pimco/injector"
 	"dan/pimco/prom"
 	"dan/pimco/server"
 	"flag"
@@ -16,7 +17,8 @@ func Serve(args []string) {
 	fs := flag.NewFlagSet("server", flag.ExitOnError)
 	cfg := conf.LoadConfigEx(fs, args...)
 	log.Println(cfg)
-	srv := server.NewServer(cfg)
+	inj := injector.New(cfg)
+	srv := server.NewServer(cfg.Server, inj.Storage(), inj.Reporter())
 	// serve metrics
 	prom.Setup(cfg.Metrics)
 	http.Handle("/metrics", promhttp.Handler())

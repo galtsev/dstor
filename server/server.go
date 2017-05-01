@@ -19,15 +19,11 @@ type Server struct {
 	json     serializer.Serializer
 }
 
-func NewServer(cfg conf.Config) *Server {
-	backends := make(map[string]pimco.Backend)
-	for name, backendType := range cfg.Server.Backends {
-		backends[name] = pimco.MakeBackend(backendType, cfg)
-	}
+func NewServer(cfg conf.ServerConfig, storage pimco.Storage, reporter pimco.Reporter) *Server {
 	server := Server{
 		json:     serializer.NewSerializer("easyjson"),
-		storage:  backends[cfg.Server.Storage],
-		reporter: backends[cfg.Server.Reporter],
+		storage:  storage,
+		reporter: reporter,
 	}
 	return &server
 }
