@@ -29,8 +29,8 @@ func (srv *KafkaCluster) Close() {
 	}
 }
 
-func (srv *KafkaCluster) AddSample(sample *model.Sample) {
-	srv.writers[srv.partitioner(sample.Tag)].AddSample(sample)
+func (srv *KafkaCluster) AddSample(sample *model.Sample, offset int64) {
+	srv.writers[srv.partitioner(sample.Tag)].AddSample(sample, offset)
 }
 
 func init() {

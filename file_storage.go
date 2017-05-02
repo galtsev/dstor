@@ -34,7 +34,7 @@ func NewFileStorage(cfg conf.Config) *FileStorage {
 	return fs
 }
 
-func (fs *FileStorage) AddSample(sample *model.Sample) {
+func (fs *FileStorage) AddSample(sample *model.Sample, offset int64) {
 	fs.ch <- *sample
 }
 

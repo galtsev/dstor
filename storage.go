@@ -29,7 +29,7 @@ type Reporter interface {
 }
 
 type Storage interface {
-	AddSample(sample *model.Sample)
+	AddSample(sample *model.Sample, offset int64)
 	Close()
 }
 
@@ -55,6 +55,6 @@ func (r FakeReporter) Report(tag string, start, stop time.Time) []ReportLine {
 
 type FakeStorage struct{}
 
-func (s FakeStorage) AddSample(sample *model.Sample) {}
+func (s FakeStorage) AddSample(sample *model.Sample, offset int64) {}
 
 func (s FakeStorage) Close() {}

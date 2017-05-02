@@ -32,8 +32,8 @@ func consumePartition(cfg conf.Config, partition int32) {
 
 	cnt := 0
 
-	for sample := range kafka.ConsumePartition(cfg.Kafka, partition, cfg.OneShot) {
-		backend.AddSample(&sample)
+	for ksample := range kafka.ConsumePartition(cfg.Kafka, partition, cfg.OneShot) {
+		backend.AddSample(&ksample.Sample, ksample.Offset)
 		cnt++
 	}
 	backend.Close()

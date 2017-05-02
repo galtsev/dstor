@@ -54,7 +54,7 @@ func (srv *Server) handleWrite(ctx *fasthttp.RequestCtx) {
 		return
 	}
 	for _, sample := range samples {
-		srv.storage.AddSample(&sample)
+		srv.storage.AddSample(&sample, 0)
 	}
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }

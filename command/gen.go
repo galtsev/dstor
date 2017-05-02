@@ -24,7 +24,7 @@ func Gen(args []string) {
 
 	for gen.Next() {
 		sample := gen.Sample()
-		storage.AddSample(sample)
+		storage.AddSample(sample, 0)
 		pimco.SetLatest(sample.TS)
 		progress.Step()
 	}

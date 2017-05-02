@@ -9,8 +9,13 @@ import (
 	"github.com/Shopify/sarama"
 )
 
-func ConsumePartition(cfg conf.KafkaConfig, partition int32, oneShot bool) chan model.Sample {
-	ch := make(chan model.Sample, 1000)
+type KafkaSample struct {
+	Sample model.Sample
+	Offset int64
+}
+
+func ConsumePartition(cfg conf.KafkaConfig, partition int32, oneShot bool) chan KafkaSample {
+	ch := make(chan KafkaSample, 1000)
 	conf := sarama.NewConfig()
 	var finalOffset int64
 
@@ -34,7 +39,7 @@ func ConsumePartition(cfg conf.KafkaConfig, partition int32, oneShot bool) chan 
 			var samples model.Samples
 			szr.Unmarshal(msg.Value, &samples)
 			for _, sample := range samples {
-				ch <- sample
+				ch <- KafkaSample{Sample: sample, Offset: msg.Offset}
 			}
 			if oneShot && msg.Offset+1 >= finalOffset {
 				close(ch)
@@ -46,7 +51,7 @@ func ConsumePartition(cfg conf.KafkaConfig, partition int32, oneShot bool) chan 
 }
 
 func PartitionLoader(cfg conf.Config, partition int32, db pimco.Storage) {
-	for sample := range ConsumePartition(cfg.Kafka, partition, false) {
-		db.AddSample(&sample)
+	for ksample := range ConsumePartition(cfg.Kafka, partition, false) {
+		db.AddSample(&ksample.Sample, ksample.Offset)
 	}
 }

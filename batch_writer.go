@@ -18,6 +18,7 @@ type Writer interface {
 type trackedSample struct {
 	sample model.Sample
 	start  time.Time
+	offset int64
 }
 
 type BatchWriter struct {
@@ -27,6 +28,7 @@ type BatchWriter struct {
 	batchSize  int
 	flushDelay time.Duration
 	verbose    bool
+	onFlush    func(int64)
 }
 
 func NewWriter(out Writer, cfg conf.BatchConfig) *BatchWriter {
@@ -35,6 +37,7 @@ func NewWriter(out Writer, cfg conf.BatchConfig) *BatchWriter {
 		ch:         make(chan trackedSample, 1000),
 		batchSize:  cfg.BatchSize,
 		flushDelay: time.Duration(cfg.FlushDelay) * time.Millisecond,
+		onFlush:    cfg.OnFlush,
 	}
 	go w.writeLoop()
 	return &w
@@ -44,10 +47,11 @@ func (w *BatchWriter) SetVerbose(value bool) {
 	w.verbose = value
 }
 
-func (w *BatchWriter) Write(sample *model.Sample) {
+func (w *BatchWriter) Write(sample *model.Sample, offset int64) {
 	ts := trackedSample{
 		sample: *sample,
 		start:  time.Now(),
+		offset: offset,
 	}
 	w.ch <- ts
 }
@@ -64,6 +68,7 @@ func (w *BatchWriter) writeLoop() {
 	timer := time.NewTimer(w.flushDelay)
 	// store batched samples arrival time here for delay tracking
 	var times []time.Time
+	var offset int64
 	for !chanClosed {
 		// reset to initial state (empty batch)
 		w.out.Flush()
@@ -92,6 +97,9 @@ func (w *BatchWriter) writeLoop() {
 				if ok {
 					w.out.Add(&sample.sample)
 					times = append(times, sample.start)
+					if sample.offset > offset {
+						offset = sample.offset
+					}
 					cnt++
 					if cnt >= w.batchSize {
 						flush = true
@@ -105,6 +113,9 @@ func (w *BatchWriter) writeLoop() {
 			}
 		}
 		w.out.Flush()
+		if w.onFlush != nil {
+			w.onFlush(offset)
+		}
 		finish := time.Now()
 		for _, t := range times {
 			prom.SampleWrite(finish.Sub(t))

@@ -29,16 +29,11 @@ func (db *DB) GetDB() *leveldb.DB {
 	return db.db
 }
 
-func nowFunc(now time.Time) func() time.Time {
-	return func() time.Time {
-		return time.Unix(0, pimco.GetLatest()).Add(-time.Duration(24) * time.Hour)
-	}
+func nowFunc() time.Time {
+	return time.Unix(0, pimco.GetLatest()).Add(-time.Duration(24) * time.Hour)
 }
 
 func Open(cfg conf.LeveldbConfig, partition int32) *DB {
-	//ttl, err := time.ParseDuration(cfg.TTL)
-	old, err := time.Parse(DATE_FORMAT, cfg.CompactBefore)
-	Check(err)
 	opts := opt.Options{
 		WriteBuffer:                   cfg.Opts.WriteBufferMb * opt.MiB,
 		CompactionTableSize:           cfg.Opts.CompactionTableSizeMb * opt.MiB,
@@ -46,7 +41,7 @@ func Open(cfg conf.LeveldbConfig, partition int32) *DB {
 		CompactionTotalSizeMultiplier: cfg.Opts.CompactionTotalSizeMultiplier,
 		WriteL0SlowdownTrigger:        cfg.Opts.WriteL0SlowdownTrigger,
 		WriteL0PauseTrigger:           cfg.Opts.WriteL0PauseTrigger,
-		ExpireBefore:                  nowFunc(old),
+		ExpireBefore:                  nowFunc,
 	}
 	partitionPath := fmt.Sprintf("%s/%d", cfg.Path, partition)
 	ldb, err := leveldb.OpenFile(partitionPath, &opts)
@@ -81,8 +76,8 @@ func (db *DB) Close() {
 	db.db.Close()
 }
 
-func (db *DB) AddSample(sample *model.Sample) {
-	db.writer.Write(sample)
+func (db *DB) AddSample(sample *model.Sample, offset int64) {
+	db.writer.Write(sample, offset)
 }
 
 func (db *DB) MakeKey(tag string, ts int64) []byte {
@@ -118,7 +113,7 @@ func (db *DB) Report(tag string, start, end time.Time) []pimco.ReportLine {
 	var resp []pimco.ReportLine
 	var prevSample *model.Sample = &model.Sample{}
 	for ts := tsBegin; ts < tsEnd; ts += step {
-		sample, ok := db.ReportOne(tag, ts)
+		sample, ok := db.ReportOne(tag, ts+step)
 		if !ok {
 			sample = prevSample
 		} else {

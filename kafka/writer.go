@@ -52,8 +52,8 @@ func (w *Writer) Flush() {
 	}
 }
 
-func (w *Writer) AddSample(sample *model.Sample) {
-	w.writer.Write(sample)
+func (w *Writer) AddSample(sample *model.Sample, offset int64) {
+	w.writer.Write(sample, offset)
 }
 
 func (w *Writer) Close() {

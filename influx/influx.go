@@ -52,8 +52,8 @@ func (w *Influx) Close() {
 	w.conn.Close()
 }
 
-func (w *Influx) AddSample(sample *model.Sample) {
-	w.writer.Write(sample)
+func (w *Influx) AddSample(sample *model.Sample, offset int64) {
+	w.writer.Write(sample, offset)
 }
 
 func (w *Influx) Report(tag string, start, stop time.Time) []pimco.ReportLine {

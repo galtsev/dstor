@@ -29,8 +29,8 @@ func (srv *LeveldbCluster) Close() {
 	}
 }
 
-func (srv *LeveldbCluster) AddSample(sample *model.Sample) {
-	srv.backends[srv.partitioner(sample.Tag)].AddSample(sample)
+func (srv *LeveldbCluster) AddSample(sample *model.Sample, offset int64) {
+	srv.backends[srv.partitioner(sample.Tag)].AddSample(sample, offset)
 }
 
 func (srv *LeveldbCluster) Report(tag string, start, stop time.Time) []pimco.ReportLine {
