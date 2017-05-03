@@ -12,8 +12,8 @@ kafka:
   serializer: msgp
 gen:
   mode: "geom"
-  start: 2017-04-10 00:00
-  end: 2017-04-15 00:00
+  start: 2017-04-15 00:00
+  end: 2017-04-20 00:00
   count: 50000000
   tags: 2000
 server:
