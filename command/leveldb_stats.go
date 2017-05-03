@@ -47,7 +47,7 @@ func collectStats(backend *ldb.DB, stats *stats) {
 	defer iter.Release()
 	for iter.Next() {
 		var sample model.Sample
-		_, t := backend.ParseKey(iter.Key())
+		t := time.Unix(0, backend.KeyTime(iter.Key()))
 		stats.h[t.Round(time.Hour)] += 1
 		base.Check(szr.Unmarshal(iter.Value(), &sample))
 		stats.t[sample.Tag] += 1

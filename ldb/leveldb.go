@@ -55,7 +55,8 @@ func Open(cfg conf.LeveldbConfig, partition int32) *DB {
 }
 
 func (db *DB) Add(sample *model.Sample) {
-	key := db.MakeKey(sample.Tag, sample.TS)
+	tagIdx := db.tagIndex.GetOrCreate(sample.Tag)
+	key := db.MakeKey(tagIdx, sample.TS)
 	body := db.szr.Marshal(sample)
 	db.batch.Put(key, body)
 }
@@ -74,26 +75,28 @@ func (db *DB) AddSample(sample *model.Sample, offset int64) {
 	db.writer.Write(sample, offset)
 }
 
-func (db *DB) MakeKey(tag string, ts int64) []byte {
+func (db *DB) MakeKey(tagIdx int, ts int64) []byte {
 	var res [12]byte
-	ti := db.tagIndex.Get(tag)
-	BigEndian.PutUint32(res[:4], uint32(ti))
+	BigEndian.PutUint32(res[:4], uint32(tagIdx))
 	BigEndian.PutUint64(res[4:], uint64(ts))
 	return res[:]
 }
 
-func (db *DB) ParseKey(key []byte) (string, time.Time) {
-	t := BigEndian.Uint64(key[4:])
-	return "", time.Unix(0, int64(t))
+func (db *DB) KeyTime(key []byte) int64 {
+	return int64(BigEndian.Uint64(key[4:]))
 }
 
 func (db *DB) ReportOne(tag string, ts int64) (*model.Sample, bool) {
-	key := db.MakeKey(tag, ts)
+	var sample model.Sample
+	tagIdx, ok := db.tagIndex.Get(tag)
+	if !ok {
+		return nil, false
+	}
+	key := db.MakeKey(tagIdx, ts)
 	iter := db.db.NewIterator(&util.Range{Limit: key}, nil)
 	if !iter.Last() {
 		return nil, false
 	}
-	var sample model.Sample
 	Check(db.szr.Unmarshal(iter.Value(), &sample))
 	return &sample, true
 }

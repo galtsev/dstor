@@ -54,12 +54,17 @@ func (t *TagIndex) add(tag string) int {
 	return t.lastId
 }
 
-func (t *TagIndex) Get(tag string) int {
-	t.lock.RLock()
-	idx, ok := t.cache[tag]
-	t.lock.RUnlock()
+func (t *TagIndex) GetOrCreate(tag string) int {
+	idx, ok := t.Get(tag)
 	if !ok {
 		idx = t.add(tag)
 	}
 	return idx
+}
+
+func (t *TagIndex) Get(tag string) (idx int, ok bool) {
+	t.lock.RLock()
+	idx, ok = t.cache[tag]
+	t.lock.RUnlock()
+	return idx, ok
 }
