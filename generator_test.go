@@ -2,6 +2,7 @@ package pimco
 
 import (
 	. "dan/pimco"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestGenerator(t *testing.T) {
-	cfg := GenConfig{
+	cfg := conf.GenConfig{
 		Start: "2017-04-17 08:30",
 		End:   "2017-04-17 9:30",
 		Count: 1800,

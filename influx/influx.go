@@ -3,6 +3,7 @@ package influx
 import (
 	"dan/pimco"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"encoding/json"
 	"fmt"
@@ -18,7 +19,7 @@ type Influx struct {
 	batch    client.BatchPoints
 }
 
-func New(cfg pimco.InfluxConfig, batchConfig pimco.BatchConfig) *Influx {
+func New(cfg conf.InfluxConfig) *Influx {
 	w := Influx{
 		bpConfig: client.BatchPointsConfig{Database: cfg.Database},
 		database: cfg.Database,
@@ -26,7 +27,7 @@ func New(cfg pimco.InfluxConfig, batchConfig pimco.BatchConfig) *Influx {
 	conn, err := client.NewHTTPClient(client.HTTPConfig{Addr: cfg.URL})
 	Check(err)
 	w.conn = conn
-	w.writer = pimco.NewWriter(&w, batchConfig)
+	w.writer = pimco.NewWriter(&w, cfg.Batch)
 	return &w
 }
 
@@ -51,8 +52,8 @@ func (w *Influx) Close() {
 	w.conn.Close()
 }
 
-func (w *Influx) AddSample(sample *model.Sample) {
-	w.writer.Write(sample)
+func (w *Influx) AddSample(sample *model.Sample, offset int64) {
+	w.writer.Write(sample, offset)
 }
 
 func (w *Influx) Report(tag string, start, stop time.Time) []pimco.ReportLine {
@@ -104,7 +105,7 @@ func AddSample(sample *model.Sample, batch client.BatchPoints) {
 }
 
 func init() {
-	pimco.RegisterBackend("influxdb", func(cfg pimco.Config) pimco.Backend {
-		return New(cfg.Influx, cfg.Batch)
+	pimco.RegisterBackend("influxdb", func(cfg conf.Config) pimco.Backend {
+		return New(cfg.Influx)
 	})
 }

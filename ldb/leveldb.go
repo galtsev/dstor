@@ -3,6 +3,7 @@ package ldb
 import (
 	"dan/pimco"
 	. "dan/pimco/base"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/serializer"
 	"encoding/binary"
@@ -23,45 +24,33 @@ type DB struct {
 	writer   *pimco.BatchWriter
 }
 
-type Options struct {
-	Leveldb  pimco.LeveldbConfig
-	Batch    pimco.BatchConfig
-	TagIndex *TagIndex
-}
-
 func (db *DB) GetDB() *leveldb.DB {
 	return db.db
 }
 
-func nowFunc(now time.Time) func() time.Time {
-	return func() time.Time {
-		return time.Unix(0, pimco.GetLatest()).Add(-time.Duration(24) * time.Hour)
-	}
+func nowFunc() time.Time {
+	return time.Unix(0, pimco.GetLatest()).Add(-time.Duration(24) * time.Hour)
 }
 
-func Open(partition int32, opts *Options) *DB {
-	o := opts.Leveldb.Opts
-	batchConfig := opts.Batch
-	old, err := time.Parse(DATE_FORMAT, opts.Leveldb.CompactBefore)
-	Check(err)
-	lopts := opt.Options{
-		WriteBuffer:                   o.WriteBufferMb * opt.MiB,
-		CompactionTableSize:           o.CompactionTableSizeMb * opt.MiB,
-		CompactionTotalSize:           o.CompactionTotalSizeMb * opt.MiB,
-		CompactionTotalSizeMultiplier: o.CompactionTotalSizeMultiplier,
-		WriteL0SlowdownTrigger:        o.WriteL0SlowdownTrigger,
-		WriteL0PauseTrigger:           o.WriteL0PauseTrigger,
-		ExpireBefore:                  nowFunc(old),
+func Open(cfg conf.LeveldbConfig, partition int32) *DB {
+	opts := opt.Options{
+		WriteBuffer:                   cfg.Opts.WriteBufferMb * opt.MiB,
+		CompactionTableSize:           cfg.Opts.CompactionTableSizeMb * opt.MiB,
+		CompactionTotalSize:           cfg.Opts.CompactionTotalSizeMb * opt.MiB,
+		CompactionTotalSizeMultiplier: cfg.Opts.CompactionTotalSizeMultiplier,
+		WriteL0SlowdownTrigger:        cfg.Opts.WriteL0SlowdownTrigger,
+		WriteL0PauseTrigger:           cfg.Opts.WriteL0PauseTrigger,
+		ExpireBefore:                  nowFunc,
 	}
-	partitionPath := fmt.Sprintf("%s/%d", opts.Leveldb.Path, partition)
-	ldb, err := leveldb.OpenFile(partitionPath, &lopts)
+	partitionPath := fmt.Sprintf("%s/%d", cfg.Path, partition)
+	ldb, err := leveldb.OpenFile(partitionPath, &opts)
 	Check(err)
 	db := DB{
 		db:       ldb,
 		szr:      serializer.MsgPackSerializer{},
-		tagIndex: opts.TagIndex,
+		tagIndex: cfg.TagIndex.(*TagIndex),
 	}
-	db.writer = pimco.NewWriter(&db, batchConfig)
+	db.writer = pimco.NewWriter(&db, cfg.Batch)
 	return &db
 }
 
@@ -81,8 +70,8 @@ func (db *DB) Close() {
 	db.db.Close()
 }
 
-func (db *DB) AddSample(sample *model.Sample) {
-	db.writer.Write(sample)
+func (db *DB) AddSample(sample *model.Sample, offset int64) {
+	db.writer.Write(sample, offset)
 }
 
 func (db *DB) MakeKey(tag string, ts int64) []byte {
@@ -115,7 +104,7 @@ func (db *DB) Report(tag string, start, end time.Time) []pimco.ReportLine {
 	var resp []pimco.ReportLine
 	var prevSample *model.Sample = &model.Sample{}
 	for ts := tsBegin; ts < tsEnd; ts += step {
-		sample, ok := db.ReportOne(tag, ts)
+		sample, ok := db.ReportOne(tag, ts+step)
 		if !ok {
 			sample = prevSample
 		} else {

@@ -2,22 +2,32 @@ package command
 
 import (
 	"dan/pimco"
+	"dan/pimco/conf"
+	"dan/pimco/injector"
 	"dan/pimco/util"
+	"flag"
 	"fmt"
 )
 
 func Gen(args []string) {
-	cfg := pimco.LoadConfig(args...)
+	fs := flag.NewFlagSet("gen", flag.ExitOnError)
+	path := fs.String("path", "", "Output file name")
+	cfg := conf.LoadConfigEx(fs, args...)
+	if *path != "" {
+		cfg.FilePath = *path
+	}
 	fmt.Println(cfg)
-	backend := pimco.MakeBackend(cfg.Server.Backend, cfg)
-	gen := pimco.NewGenerator(cfg.Gen)
+	inj := injector.New(cfg)
+	storage := inj.Storage()
+	gen := inj.Generator()
 	progress := util.NewProgress(100000)
 
 	for gen.Next() {
 		sample := gen.Sample()
-		backend.AddSample(sample)
+		storage.AddSample(sample, 0)
+		pimco.SetLatest(sample.TS)
 		progress.Step()
 	}
-	backend.Close()
+	storage.Close()
 
 }

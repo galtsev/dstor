@@ -1,13 +1,14 @@
 package pimco
 
 import (
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"log"
 	"time"
 )
 
 var (
-	backendRegistry = make(map[string]func(cfg Config) Backend)
+	backendRegistry = make(map[string]func(cfg conf.Config) Backend)
 )
 
 type ReportLine struct {
@@ -28,7 +29,7 @@ type Reporter interface {
 }
 
 type Storage interface {
-	AddSample(sample *model.Sample)
+	AddSample(sample *model.Sample, offset int64)
 	Close()
 }
 
@@ -37,11 +38,23 @@ type Backend interface {
 	Reporter
 }
 
-func RegisterBackend(name string, factory func(cfg Config) Backend) {
+func RegisterBackend(name string, factory func(cfg conf.Config) Backend) {
 	log.Printf("Registered backend %s", name)
 	backendRegistry[name] = factory
 }
 
-func MakeBackend(name string, cfg Config) Backend {
+func MakeBackend(name string, cfg conf.Config) Backend {
 	return backendRegistry[name](cfg)
 }
+
+type FakeReporter struct{}
+
+func (r FakeReporter) Report(tag string, start, stop time.Time) []ReportLine {
+	return []ReportLine{}
+}
+
+type FakeStorage struct{}
+
+func (s FakeStorage) AddSample(sample *model.Sample, offset int64) {}
+
+func (s FakeStorage) Close() {}

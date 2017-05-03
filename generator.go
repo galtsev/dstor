@@ -1,6 +1,7 @@
 package pimco
 
 import (
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"errors"
 	"fmt"
@@ -50,7 +51,7 @@ func (g *RandomGenerator) Sample() *model.Sample {
 	return MakeSample(g.ts, g.tags[rand.Intn(len(g.tags))])
 }
 
-func NewGenerator(cfg GenConfig) Generator {
+func NewGenerator(cfg conf.GenConfig) Generator {
 	ss, ee := cfg.Period()
 	ts, end_ts := ss.UnixNano(), ee.UnixNano()
 	if end_ts <= ts {

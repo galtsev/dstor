@@ -2,6 +2,7 @@ package ldb
 
 import (
 	"dan/pimco"
+	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/serializer"
 	"path"
@@ -15,19 +16,14 @@ type LeveldbCluster struct {
 	partitioner func(string) int32
 }
 
-func NewCluster(cfg pimco.Config) *LeveldbCluster {
+func NewCluster(cfg conf.Config) *LeveldbCluster {
 	server := LeveldbCluster{
-		json:        serializer.NewSerializer("easyjson"),
 		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
 		tagIndex:    NewTagIndex(path.Join(cfg.Leveldb.Path, "tags")),
 	}
-	opts := Options{
-		Leveldb:  cfg.Leveldb,
-		Batch:    cfg.Batch,
-		TagIndex: server.tagIndex,
-	}
+	cfg.Leveldb.TagIndex = server.tagIndex
 	for p := 0; p < cfg.Kafka.NumPartitions; p++ {
-		db := Open(int32(p), &opts)
+		db := Open(cfg.Leveldb, int32(p))
 		server.backends = append(server.backends, db)
 	}
 	return &server
@@ -40,8 +36,8 @@ func (srv *LeveldbCluster) Close() {
 	srv.tagIndex.Close()
 }
 
-func (srv *LeveldbCluster) AddSample(sample *model.Sample) {
-	srv.backends[srv.partitioner(sample.Tag)].AddSample(sample)
+func (srv *LeveldbCluster) AddSample(sample *model.Sample, offset int64) {
+	srv.backends[srv.partitioner(sample.Tag)].AddSample(sample, offset)
 	pimco.SetLatest(sample.TS)
 }
 
@@ -54,7 +50,7 @@ func (srv *LeveldbCluster) Backends() []*DB {
 }
 
 func init() {
-	pimco.RegisterBackend("leveldb", func(cfg pimco.Config) pimco.Backend {
+	pimco.RegisterBackend("leveldb", func(cfg conf.Config) pimco.Backend {
 		return NewCluster(cfg)
 	})
 }
