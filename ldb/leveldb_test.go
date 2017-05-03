@@ -1,6 +1,7 @@
 package ldb
 
 import (
+	"dan/pimco"
 	"dan/pimco/conf"
 	"dan/pimco/model"
 	"fmt"
@@ -18,6 +19,13 @@ type dbHarness struct {
 	t        *testing.T
 	flushCh  chan int64
 	tagIndex *TagIndex
+	report   struct {
+		tag     string
+		start   time.Time
+		step    int //seconds
+		result  []pimco.ReportLine
+		samples []model.Sample
+	}
 }
 
 func (hs *dbHarness) Close() {
@@ -56,17 +64,36 @@ func newHarness(t *testing.T) *dbHarness {
 	return newHarnessWithConfig(t, defaultConfig())
 }
 
-func (hs *dbHarness) withSamples(dest *[]model.Sample, tag string, offset int64, ts ...int64) *dbHarness {
+func (hs *dbHarness) withReport(step int) *dbHarness {
+	hs.report.start = time.Now()
+	hs.report.step = step
+	hs.report.tag = fmt.Sprintf("newtag-%d", rand.Intn(100000))
+	return hs
+}
+
+func (hs *dbHarness) runReport() *dbHarness {
+	hs.report.result = hs.db.Report(hs.report.tag, hs.report.start, hs.report.start.Add(time.Duration(hs.report.step*100)*time.Second))
+	return hs
+}
+
+func (hs *dbHarness) expectResultValues(vindex int, expect map[int]int) {
+	for rid, sid := range expect {
+		assert.Equal(hs.t, hs.report.samples[sid].Values[vindex], hs.report.result[rid].Values[vindex])
+	}
+}
+
+/* ts - sample time, seconds since start */
+func (hs *dbHarness) withSamples(offset int64, ts ...int) *dbHarness {
 	for _, t := range ts {
 		sample := model.Sample{
-			Tag: tag,
-			TS:  t,
+			Tag: hs.report.tag,
+			TS:  hs.report.start.Add(time.Duration(t) * time.Second).UnixNano(),
 		}
 		for i := range sample.Values {
 			sample.Values[i] = rand.Float64()
 		}
 		hs.db.AddSample(&sample, offset)
-		*dest = append(*dest, sample)
+		hs.report.samples = append(hs.report.samples, sample)
 	}
 	return hs
 }
@@ -75,15 +102,9 @@ func (hs *dbHarness) flush() int64 {
 	return <-hs.flushCh
 }
 
-func TestLDB_Simple(t *testing.T) {
+func TestLDB_Report(t *testing.T) {
 	hs := newHarness(t)
 	defer hs.Close()
-	tag := "tag1"
-	reportStart := time.Now()
-	reportEnd := reportStart.Add(time.Duration(40*100) * time.Second)
-	var samples []model.Sample
-	hs.withSamples(&samples, tag, 0, reportStart.Add(time.Duration(30)*time.Second).UnixNano())
-	hs.flush()
-	res := hs.db.Report(tag, reportStart, reportEnd)
-	assert.Equal(hs.t, samples[0].Values[0], res[0].Values[0])
+	hs.withReport(40).withSamples(0, 30).flush()
+	hs.runReport().expectResultValues(0, map[int]int{0: 0, 1: 0, 2: 0})
 }
