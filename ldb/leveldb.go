@@ -67,6 +67,7 @@ func (db *DB) Flush() {
 }
 
 func (db *DB) Close() {
+	db.writer.Close()
 	db.Flush()
 	db.db.Close()
 }

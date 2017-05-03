@@ -14,23 +14,17 @@ import (
 )
 
 type dbHarness struct {
-	dbPath   string
+	cfg      *conf.LeveldbConfig
 	db       *DB
 	t        *testing.T
 	flushCh  chan int64
 	tagIndex *TagIndex
-	report   struct {
-		tag    string
-		start  time.Time
-		step   int //seconds
-		result []pimco.ReportLine
-	}
 }
 
 func (hs *dbHarness) Close() {
 	hs.tagIndex.Close()
 	hs.db.Close()
-	os.RemoveAll(hs.dbPath)
+	os.RemoveAll(hs.cfg.Path)
 }
 
 func defaultConfig() conf.LeveldbConfig {
@@ -46,7 +40,7 @@ func defaultConfig() conf.LeveldbConfig {
 
 func newHarnessWithConfig(t *testing.T, cfg conf.LeveldbConfig) *dbHarness {
 	hs := &dbHarness{
-		dbPath:   cfg.Path,
+		cfg:      &cfg,
 		t:        t,
 		flushCh:  make(chan int64, 1),
 		tagIndex: NewTagIndex(cfg.Path),
@@ -63,31 +57,33 @@ func newHarness(t *testing.T) *dbHarness {
 	return newHarnessWithConfig(t, defaultConfig())
 }
 
-func (hs *dbHarness) withReport(step int) *dbHarness {
-	hs.report.start = time.Now()
-	hs.report.step = step
-	hs.report.tag = fmt.Sprintf("newtag-%d", rand.Intn(100000))
-	return hs
+func (hs *dbHarness) reopenDB() {
+	hs.db.Close()
+	hs.db = Open(*hs.cfg, 0)
 }
 
-func (hs *dbHarness) runReport() *dbHarness {
-	hs.report.result = hs.db.Report(hs.report.tag, hs.report.start, hs.report.start.Add(time.Duration(hs.report.step*100)*time.Second))
-	return hs
+func (hs *dbHarness) runReport(tag string, start time.Time, step int) []pimco.ReportLine {
+	return hs.db.Report(tag, start, start.Add(time.Duration(step*100)*time.Second))
 }
 
-func (hs *dbHarness) expectResultRows(expected *model.Sample, actualIndex ...int) {
+func (hs *dbHarness) expectResultRows(rows []pimco.ReportLine, expected *model.Sample, actualIndex ...int) {
 	for _, idx := range actualIndex {
+		row := rows[idx]
 		for vid := range expected.Values {
-			assert.Equal(hs.t, expected.Values[vid], hs.report.result[idx].Values[vid])
+			assert.Equal(hs.t, expected.Values[vid], row.Values[vid])
 		}
 	}
 }
 
+func (hs *dbHarness) makeTag() string {
+	return fmt.Sprintf("newtag-%d", rand.Intn(100000))
+}
+
 /* ts - sample time, seconds since start */
-func (hs *dbHarness) withSample(offset int64, ts int) *model.Sample {
+func (hs *dbHarness) withSample(tag string, start time.Time, offset int64, ts int) *model.Sample {
 	sample := model.Sample{
-		Tag: hs.report.tag,
-		TS:  hs.report.start.Add(time.Duration(ts) * time.Second).UnixNano(),
+		Tag: tag,
+		TS:  start.Add(time.Duration(ts) * time.Second).UnixNano(),
 	}
 	for i := range sample.Values {
 		sample.Values[i] = rand.Float64()
@@ -100,7 +96,9 @@ func (hs *dbHarness) flush() int64 {
 	return <-hs.flushCh
 }
 
-func TestLDB_Report(t *testing.T) {
+// check correct selection of last sample in the range
+// also with unordered sample writes
+func TestLDB_ReportBasic(t *testing.T) {
 	/*
 	   |400                439|440             479|480             520|
 	   |      range 10        |     range 11      |    range 12       |
@@ -108,27 +106,76 @@ func TestLDB_Report(t *testing.T) {
 	*/
 	hs := newHarness(t)
 	defer hs.Close()
-	hs.withReport(40)
+	start := time.Now()
+	step := 40 //seconds
+	t1 := hs.makeTag()
 	// put one sample (s1) to range 10 (start+400s..start+440s)
-	s1 := hs.withSample(0, 430)
+	s1 := hs.withSample(t1, start, 0, 430)
 	hs.flush()
-	hs.runReport()
-	hs.expectResultRows(s1, 10, 11, 20, 21)
+	rows := hs.runReport(t1, start, step)
+	hs.expectResultRows(rows, s1, 10, 11, 20, 21)
 	// put one more sample to range 12 (start+480s..start+520s)
-	s2 := hs.withSample(0, 500)
+	s2 := hs.withSample(t1, start, 0, 500)
 	hs.flush()
-	hs.runReport()
-	hs.expectResultRows(s1, 10, 11)
-	hs.expectResultRows(s2, 12, 13, 20)
+	rows = hs.runReport(t1, start, step)
+	hs.expectResultRows(rows, s1, 10, 11)
+	hs.expectResultRows(rows, s2, 12, 13, 20)
 	// s3 in range 10, override s1, but not s2
-	s3 := hs.withSample(0, 432)
+	s3 := hs.withSample(t1, start, 0, 432)
 	hs.flush()
-	hs.runReport()
-	hs.expectResultRows(s3, 10, 11)
-	hs.expectResultRows(s2, 12, 14, 30)
+	rows = hs.runReport(t1, start, step)
+	hs.expectResultRows(rows, s3, 10, 11)
+	hs.expectResultRows(rows, s2, 12, 14, 30)
 	// s4 in range 12, but before s2 will not override s2
-	_ = hs.withSample(0, 490)
+	_ = hs.withSample(t1, start, 0, 490)
 	hs.flush()
-	hs.runReport()
-	hs.expectResultRows(s2, 12, 14, 30)
+	rows = hs.runReport(t1, start, step)
+	hs.expectResultRows(rows, s2, 12, 14, 30)
+}
+
+// check that samples of other tags don't affect report
+func TestLDB_ReportMultiTag(t *testing.T) {
+	/*
+		|400                499|500              599|
+		|     range 4          |        range 5     |
+		|  420:s1 440:s2       |    510:s3  530:s4  |
+	*/
+	hs := newHarness(t)
+	defer hs.Close()
+	start := time.Now()
+	step := 100
+	t1 := hs.makeTag()
+	t2 := hs.makeTag()
+	s1 := hs.withSample(t1, start, 0, 420)
+	s2 := hs.withSample(t2, start, 0, 440)
+	s3 := hs.withSample(t2, start, 0, 510)
+	s4 := hs.withSample(t1, start, 0, 530)
+	hs.flush()
+	rows := hs.runReport(t1, start, step)
+	hs.expectResultRows(rows, s1, 4)
+	hs.expectResultRows(rows, s4, 5)
+	rows = hs.runReport(t2, start, step)
+	hs.expectResultRows(rows, s2, 4)
+	hs.expectResultRows(rows, s3, 5)
+}
+
+// data remain after database re-opens
+func TestLDB_ReportReopenDB(t *testing.T) {
+	/*
+		|400                499|500              599|
+		|     range 4          |        range 5     |
+		|  420:s1              |    510:s2          |
+	*/
+	hs := newHarness(t)
+	defer hs.Close()
+	start := time.Now()
+	step := 100
+	tag := hs.makeTag()
+	s1 := hs.withSample(tag, start, 0, 420)
+	s2 := hs.withSample(tag, start, 0, 510)
+	hs.reopenDB()
+	rows := hs.runReport(tag, start, step)
+	hs.expectResultRows(rows, s1, 4)
+	hs.expectResultRows(rows, s2, 5)
+
 }
