@@ -20,9 +20,6 @@ type dbHarness struct {
 }
 
 func (hs *dbHarness) Close() {
-	if hs.timeout != nil {
-		hs.timeout.Stop()
-	}
 	hs.db.Close()
 	os.RemoveAll(hs.dbPath)
 }
@@ -40,8 +37,9 @@ func defaultConfig() conf.LeveldbConfig {
 
 func newHarnessWithConfig(t *testing.T, cfg conf.LeveldbConfig) *dbHarness {
 	hs := &dbHarness{
-		dbPath: cfg.Path,
-		t:      t,
+		dbPath:  cfg.Path,
+		t:       t,
+		flushCh: make(chan int64, 1),
 	}
 	cfg.Batch.OnFlush = func(offset int64) {
 		hs.flushCh <- offset
