@@ -177,5 +177,22 @@ func TestLDB_ReportReopenDB(t *testing.T) {
 	rows := hs.runReport(tag, start, step)
 	hs.expectResultRows(rows, s1, 4)
 	hs.expectResultRows(rows, s2, 5)
+}
+
+// check that OnFlush return correct offset for the batch
+func TestLDB_Offset(t *testing.T) {
+	hs := newHarness(t)
+	defer hs.Close()
+	start := time.Now()
+	tag := hs.makeTag()
+	// case 1 - offsets ordered on write
+	hs.withSample(tag, start, 0, 420)
+	hs.withSample(tag, start, 1, 510)
+	assert.Equal(t, int64(1), hs.flush())
+
+	// case 2 - offsets in reverse order
+	hs.withSample(tag, start, 3, 520)
+	hs.withSample(tag, start, 2, 530)
+	assert.Equal(t, int64(3), hs.flush())
 
 }

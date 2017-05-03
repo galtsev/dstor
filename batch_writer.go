@@ -63,22 +63,20 @@ func (w *BatchWriter) Close() {
 }
 
 func (w *BatchWriter) writeLoop() {
-	var cnt int
 	var chanClosed bool
 	timer := time.NewTimer(w.flushDelay)
 	// store batched samples arrival time here for delay tracking
 	var times []time.Time
-	var offset int64
 	for !chanClosed {
+		var offset int64 = 0
+		var cnt int = 0
 		// reset to initial state (empty batch)
-		w.out.Flush()
 		if !timer.Stop() {
 			select {
 			case <-timer.C:
 			default:
 			}
 		}
-		cnt = 0
 
 		// wait for first sample or channel close, no timeout
 		sample, ok := <-w.ch
@@ -88,6 +86,7 @@ func (w *BatchWriter) writeLoop() {
 		}
 		w.out.Add(&sample.sample)
 		times = append(times, sample.start)
+		offset = sample.offset
 		cnt++
 		timer.Reset(w.flushDelay)
 		flush := false
@@ -122,7 +121,7 @@ func (w *BatchWriter) writeLoop() {
 		}
 		times = times[:0]
 		if w.verbose {
-			log.Printf("Writing batch of size %d", cnt)
+			log.Printf("Written batch of size %d", cnt)
 		}
 	}
 	w.wg.Done()
