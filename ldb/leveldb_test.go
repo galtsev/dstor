@@ -20,11 +20,10 @@ type dbHarness struct {
 	flushCh  chan int64
 	tagIndex *TagIndex
 	report   struct {
-		tag     string
-		start   time.Time
-		step    int //seconds
-		result  []pimco.ReportLine
-		samples []model.Sample
+		tag    string
+		start  time.Time
+		step   int //seconds
+		result []pimco.ReportLine
 	}
 }
 
@@ -76,26 +75,25 @@ func (hs *dbHarness) runReport() *dbHarness {
 	return hs
 }
 
-func (hs *dbHarness) expectResultValues(vindex int, expect map[int]int) {
-	for rid, sid := range expect {
-		assert.Equal(hs.t, hs.report.samples[sid].Values[vindex], hs.report.result[rid].Values[vindex])
+func (hs *dbHarness) expectResultRows(expected *model.Sample, actualIndex ...int) {
+	for _, idx := range actualIndex {
+		for vid := range expected.Values {
+			assert.Equal(hs.t, expected.Values[vid], hs.report.result[idx].Values[vid])
+		}
 	}
 }
 
 /* ts - sample time, seconds since start */
-func (hs *dbHarness) withSamples(offset int64, ts ...int) *dbHarness {
-	for _, t := range ts {
-		sample := model.Sample{
-			Tag: hs.report.tag,
-			TS:  hs.report.start.Add(time.Duration(t) * time.Second).UnixNano(),
-		}
-		for i := range sample.Values {
-			sample.Values[i] = rand.Float64()
-		}
-		hs.db.AddSample(&sample, offset)
-		hs.report.samples = append(hs.report.samples, sample)
+func (hs *dbHarness) withSample(offset int64, ts int) *model.Sample {
+	sample := model.Sample{
+		Tag: hs.report.tag,
+		TS:  hs.report.start.Add(time.Duration(ts) * time.Second).UnixNano(),
 	}
-	return hs
+	for i := range sample.Values {
+		sample.Values[i] = rand.Float64()
+	}
+	hs.db.AddSample(&sample, offset)
+	return &sample
 }
 
 func (hs *dbHarness) flush() int64 {
@@ -103,8 +101,34 @@ func (hs *dbHarness) flush() int64 {
 }
 
 func TestLDB_Report(t *testing.T) {
+	/*
+	   |400                439|440             479|480             520|
+	   |      range 10        |     range 11      |    range 12       |
+	   |   430:s1  432:s3     |                   |  490:s4  500:s2   |
+	*/
 	hs := newHarness(t)
 	defer hs.Close()
-	hs.withReport(40).withSamples(0, 30).flush()
-	hs.runReport().expectResultValues(0, map[int]int{0: 0, 1: 0, 2: 0})
+	hs.withReport(40)
+	// put one sample (s1) to range 10 (start+400s..start+440s)
+	s1 := hs.withSample(0, 430)
+	hs.flush()
+	hs.runReport()
+	hs.expectResultRows(s1, 10, 11, 20, 21)
+	// put one more sample to range 12 (start+480s..start+520s)
+	s2 := hs.withSample(0, 500)
+	hs.flush()
+	hs.runReport()
+	hs.expectResultRows(s1, 10, 11)
+	hs.expectResultRows(s2, 12, 13, 20)
+	// s3 in range 10, override s1, but not s2
+	s3 := hs.withSample(0, 432)
+	hs.flush()
+	hs.runReport()
+	hs.expectResultRows(s3, 10, 11)
+	hs.expectResultRows(s2, 12, 14, 30)
+	// s4 in range 12, but before s2 will not override s2
+	_ = hs.withSample(0, 490)
+	hs.flush()
+	hs.runReport()
+	hs.expectResultRows(s2, 12, 14, 30)
 }
