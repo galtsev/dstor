@@ -12,7 +12,6 @@ import (
 )
 
 type FileStorage struct {
-	FakeReporter
 	f   io.Closer
 	w   *bufio.Writer
 	szr serializer.Serializer
@@ -52,10 +51,4 @@ func (fs *FileStorage) Close() {
 	fs.wg.Wait()
 	fs.w.Flush()
 	fs.f.Close()
-}
-
-func init() {
-	RegisterBackend("file", func(cfg conf.Config) Backend {
-		return NewFileStorage(cfg)
-	})
 }

@@ -76,7 +76,7 @@ func showStats(stats *stats) {
 func LeveldbStats(args []string) {
 	cfg := conf.LoadConfig(args...)
 	fmt.Println(cfg)
-	srv := ldb.NewCluster(cfg)
+	srv := ldb.NewCluster(cfg.Leveldb)
 	stats := stats{
 		h: make(map[time.Time]int),
 		t: make(map[string]int),

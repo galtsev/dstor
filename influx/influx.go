@@ -105,9 +105,3 @@ func AddSample(sample *model.Sample, batch client.BatchPoints) {
 	point, _ := client.NewPoint("ms", map[string]string{"tag": sample.Tag}, fields, time.Unix(0, sample.TS))
 	batch.AddPoint(point)
 }
-
-func init() {
-	pimco.RegisterBackend("influxdb", func(cfg conf.Config) pimco.Backend {
-		return New(cfg.Influx, int32(0))
-	})
-}

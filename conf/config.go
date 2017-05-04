@@ -71,6 +71,8 @@ type LeveldbConfig struct {
 	CompactBefore string `yaml:"compact_before"`
 	Batch         BatchConfig
 	TagIndex      interface{}
+	NumPartitions int
+	Partitions    []int32
 }
 
 type MetricsConfig struct {

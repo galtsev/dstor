@@ -7,7 +7,6 @@ import (
 )
 
 type KafkaCluster struct {
-	pimco.FakeReporter
 	writers     []*Writer
 	partitioner func(string) int32
 }
@@ -31,10 +30,4 @@ func (srv *KafkaCluster) Close() {
 
 func (srv *KafkaCluster) AddSample(sample *model.Sample, offset int64) {
 	srv.writers[srv.partitioner(sample.Tag)].AddSample(sample, offset)
-}
-
-func init() {
-	pimco.RegisterBackend("kafka", func(cfg conf.Config) pimco.Backend {
-		return NewCluster(cfg)
-	})
 }

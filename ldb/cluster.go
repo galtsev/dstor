@@ -16,14 +16,14 @@ type LeveldbCluster struct {
 	partitioner func(string) int32
 }
 
-func NewCluster(cfg conf.Config) *LeveldbCluster {
+func NewCluster(cfg conf.LeveldbConfig) *LeveldbCluster {
 	server := LeveldbCluster{
-		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
-		tagIndex:    NewTagIndex(path.Join(cfg.Leveldb.Path, "tags")),
+		partitioner: pimco.MakePartitioner(cfg.NumPartitions),
+		tagIndex:    NewTagIndex(path.Join(cfg.Path, "tags")),
 	}
-	cfg.Leveldb.TagIndex = server.tagIndex
-	for p := 0; p < cfg.Kafka.NumPartitions; p++ {
-		db := Open(cfg.Leveldb, int32(p))
+	cfg.TagIndex = server.tagIndex
+	for _, p := range cfg.Partitions {
+		db := Open(cfg, p)
 		server.backends = append(server.backends, db)
 	}
 	return &server
@@ -47,10 +47,4 @@ func (srv *LeveldbCluster) Report(tag string, start, stop time.Time) []pimco.Rep
 
 func (srv *LeveldbCluster) Backends() []*DB {
 	return srv.backends
-}
-
-func init() {
-	pimco.RegisterBackend("leveldb", func(cfg conf.Config) pimco.Backend {
-		return NewCluster(cfg)
-	})
 }

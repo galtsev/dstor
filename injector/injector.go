@@ -37,7 +37,7 @@ func (j *Injector) Storage() pimco.Storage {
 		} else {
 			switch srv.Storage {
 			case "leveldb":
-				j.storage = ldb.NewCluster(j.cfg)
+				j.storage = ldb.NewCluster(j.cfg.Leveldb)
 			case "kafka":
 				j.storage = kafka.NewCluster(j.cfg)
 			case "influx":
@@ -60,7 +60,7 @@ func (j *Injector) Reporter() pimco.Reporter {
 		} else {
 			switch srv.Reporter {
 			case "leveldb":
-				j.reporter = ldb.NewCluster(j.cfg)
+				j.reporter = ldb.NewCluster(j.cfg.Leveldb)
 			case "remote":
 				j.reporter = ldb.NewReporter(j.cfg)
 			case "influx":

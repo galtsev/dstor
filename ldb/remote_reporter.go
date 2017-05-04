@@ -8,7 +8,6 @@ import (
 )
 
 type Reporter struct {
-	pimco.FakeStorage
 	nodes       []*api.Client
 	partitioner func(string) int32
 }
@@ -28,10 +27,4 @@ func NewReporter(cfg conf.Config) *Reporter {
 func (srv *Reporter) Report(tag string, start, stop time.Time) []pimco.ReportLine {
 	partition := srv.partitioner(tag)
 	return srv.nodes[partition].Report(tag, start, stop)
-}
-
-func init() {
-	pimco.RegisterBackend("remote", func(cfg conf.Config) pimco.Backend {
-		return NewReporter(cfg)
-	})
 }
