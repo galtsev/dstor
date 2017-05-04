@@ -45,7 +45,7 @@ func newHarnessWithConfig(t *testing.T, cfg conf.LeveldbConfig) *dbHarness {
 		flushCh:  make(chan int64, 1),
 		tagIndex: NewTagIndex(cfg.Path),
 	}
-	cfg.Batch.OnFlush = func(offset int64) {
+	cfg.Batch.OnFlush = func(partition int32, offset int64) {
 		hs.flushCh <- offset
 	}
 	cfg.TagIndex = hs.tagIndex

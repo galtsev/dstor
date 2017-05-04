@@ -80,9 +80,9 @@ type MetricsConfig struct {
 }
 
 type BatchConfig struct {
-	BatchSize  int         `yaml:"batch_size"`
-	FlushDelay int         `yaml:"flush_delay"`
-	OnFlush    func(int64) `yaml:""`
+	BatchSize  int                                 `yaml:"batch_size"`
+	FlushDelay int                                 `yaml:"flush_delay"`
+	OnFlush    func(partition int32, offset int64) `yaml:""`
 }
 
 type Config struct {

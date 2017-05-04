@@ -28,15 +28,17 @@ type BatchWriter struct {
 	batchSize  int
 	flushDelay time.Duration
 	verbose    bool
-	onFlush    func(int64)
+	partition  int32
+	onFlush    func(int32, int64)
 }
 
-func NewWriter(out Writer, cfg conf.BatchConfig) *BatchWriter {
+func NewWriter(out Writer, cfg conf.BatchConfig, partition int32) *BatchWriter {
 	w := BatchWriter{
 		out:        out,
 		ch:         make(chan trackedSample, 1000),
 		batchSize:  cfg.BatchSize,
 		flushDelay: time.Duration(cfg.FlushDelay) * time.Millisecond,
+		partition:  partition,
 		onFlush:    cfg.OnFlush,
 	}
 	go w.writeLoop()
@@ -113,7 +115,7 @@ func (w *BatchWriter) writeLoop() {
 		}
 		w.out.Flush()
 		if w.onFlush != nil {
-			w.onFlush(offset)
+			w.onFlush(w.partition, offset)
 		}
 		finish := time.Now()
 		for _, t := range times {

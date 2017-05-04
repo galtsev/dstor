@@ -50,7 +50,7 @@ func Open(cfg conf.LeveldbConfig, partition int32) *DB {
 		szr:      serializer.MsgPackSerializer{},
 		tagIndex: cfg.TagIndex.(*TagIndex),
 	}
-	db.writer = pimco.NewWriter(&db, cfg.Batch)
+	db.writer = pimco.NewWriter(&db, cfg.Batch, partition)
 	return &db
 }
 

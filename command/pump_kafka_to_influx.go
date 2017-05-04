@@ -28,7 +28,7 @@ func PumpKafka2Influx(args []string) {
 
 // TODO Graceful cancelation
 func consumePartition(cfg conf.Config, partition int32) {
-	backend := influx.New(cfg.Influx)
+	backend := influx.New(cfg.Influx, partition)
 
 	cnt := 0
 

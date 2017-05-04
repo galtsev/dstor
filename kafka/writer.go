@@ -24,7 +24,7 @@ func NewWriter(cfg conf.KafkaConfig, partition int32) *Writer {
 		partition: partition,
 		szr:       serializer.NewSerializer(cfg.Serializer),
 	}
-	w.writer = pimco.NewWriter(&w, cfg.Batch)
+	w.writer = pimco.NewWriter(&w, cfg.Batch, partition)
 	conf := sarama.NewConfig()
 	conf.Producer.Partitioner = sarama.NewManualPartitioner
 	conf.Producer.Return.Successes = true
