@@ -4,7 +4,6 @@ import (
 	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/prom"
-	"log"
 	"sync"
 	"time"
 )
@@ -21,32 +20,33 @@ type trackedSample struct {
 	offset int64
 }
 
+type BatchContext interface {
+	OnFlush(offset int64)
+}
+
+type FakeContext struct{}
+
+func (ctx FakeContext) OnFlush(offset int64) {}
+
 type BatchWriter struct {
 	out        Writer
 	ch         chan trackedSample
 	wg         sync.WaitGroup
 	batchSize  int
 	flushDelay time.Duration
-	verbose    bool
-	partition  int32
-	onFlush    func(int32, int64)
+	ctx        BatchContext
 }
 
-func NewWriter(out Writer, cfg conf.BatchConfig, partition int32) *BatchWriter {
+func NewWriter(out Writer, cfg conf.BatchConfig, ctx BatchContext) *BatchWriter {
 	w := BatchWriter{
 		out:        out,
 		ch:         make(chan trackedSample, 1000),
 		batchSize:  cfg.BatchSize,
 		flushDelay: time.Duration(cfg.FlushDelay) * time.Millisecond,
-		partition:  partition,
-		onFlush:    cfg.OnFlush,
+		ctx:        ctx,
 	}
 	go w.writeLoop()
 	return &w
-}
-
-func (w *BatchWriter) SetVerbose(value bool) {
-	w.verbose = value
 }
 
 func (w *BatchWriter) Write(sample *model.Sample, offset int64) {
@@ -114,17 +114,14 @@ func (w *BatchWriter) writeLoop() {
 			}
 		}
 		w.out.Flush()
-		if w.onFlush != nil {
-			w.onFlush(w.partition, offset)
+		if w.ctx != nil {
+			w.ctx.OnFlush(offset)
 		}
 		finish := time.Now()
 		for _, t := range times {
 			prom.SampleWrite(finish.Sub(t))
 		}
 		times = times[:0]
-		if w.verbose {
-			log.Printf("Written batch of size %d", cnt)
-		}
 	}
 	w.wg.Done()
 }

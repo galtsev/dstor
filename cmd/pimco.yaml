@@ -43,7 +43,6 @@ client:
   batch_size: 10
 leveldb:
   path: /tmp/leveldb
-  compact_before: 2017-04-13 12:00
 batch:
   batch_size: 1000
 one_shot: false

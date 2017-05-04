@@ -41,7 +41,7 @@ func (j *Injector) Storage() pimco.Storage {
 			case "kafka":
 				j.storage = kafka.NewCluster(j.cfg)
 			case "influx":
-				j.reporter = influx.New(j.cfg.Influx, int32(0))
+				j.reporter = influx.New(j.cfg.Influx, pimco.FakeContext{})
 			case "file":
 				j.storage = pimco.NewFileStorage(j.cfg)
 			default:
@@ -64,7 +64,7 @@ func (j *Injector) Reporter() pimco.Reporter {
 			case "remote":
 				j.reporter = ldb.NewReporter(j.cfg)
 			case "influx":
-				j.reporter = influx.New(j.cfg.Influx, int32(0))
+				j.reporter = influx.New(j.cfg.Influx, pimco.FakeContext{})
 			default:
 				panic(fmt.Errorf("Unknown reporter in cfg.Server.Reporter: %s", srv.Reporter))
 			}

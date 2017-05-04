@@ -16,7 +16,7 @@ func NewCluster(cfg conf.Config) *KafkaCluster {
 		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
 	}
 	for p := 0; p < cfg.Kafka.NumPartitions; p++ {
-		w := NewWriter(cfg.Kafka, int32(p))
+		w := NewWriter(cfg.Kafka, int32(p), pimco.FakeContext{})
 		cluster.writers = append(cluster.writers, w)
 	}
 	return &cluster

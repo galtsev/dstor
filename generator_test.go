@@ -1,7 +1,7 @@
 package pimco
 
 import (
-	. "dan/pimco"
+	. "dan/pimco/base"
 	"dan/pimco/conf"
 	"dan/pimco/model"
 	"github.com/stretchr/testify/assert"
@@ -15,6 +15,7 @@ func TestGenerator(t *testing.T) {
 		End:   "2017-04-17 9:30",
 		Count: 1800,
 		Tags:  20,
+		Mode:  "random",
 	}
 	gen := NewGenerator(cfg)
 	expectedFirst, err := time.Parse(DATE_FORMAT, cfg.Start)

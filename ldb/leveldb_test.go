@@ -15,7 +15,7 @@ import (
 
 type dbHarness struct {
 	cfg      conf.LeveldbConfig
-	openFn   func(cfg conf.LeveldbConfig) pimco.Backend
+	openFn   func() pimco.Backend
 	db       pimco.Backend
 	t        *testing.T
 	flushCh  chan int64
@@ -30,10 +30,9 @@ func (hs *dbHarness) Close() {
 	os.RemoveAll(hs.cfg.Path)
 }
 
-func defaultConfig() conf.LeveldbConfig {
-	dbPath := path.Join("/tmp", fmt.Sprintf("leveldb-test-%d", rand.Intn(1000000)))
-	return conf.LeveldbConfig{
-		Path: dbPath,
+func new(t *testing.T) *dbHarness {
+	cfg := conf.LeveldbConfig{
+		Path: path.Join("/tmp", fmt.Sprintf("leveldb-test-%d", rand.Intn(1000000))),
 		Batch: conf.BatchConfig{
 			BatchSize:  10,
 			FlushDelay: 10,
@@ -41,45 +40,59 @@ func defaultConfig() conf.LeveldbConfig {
 		NumPartitions: 1,
 		Partitions:    []int32{0},
 	}
-}
-
-func new(t *testing.T) *dbHarness {
-	cfg := defaultConfig()
 	hs := &dbHarness{
 		cfg:     cfg,
 		t:       t,
 		flushCh: make(chan int64, 2),
 	}
-	hs.cfg.Batch.OnFlush = func(partition int32, offset int64) {
-		hs.flushCh <- offset
-	}
 	return hs
+}
+
+type testContext struct {
+	*TagIndex
+	ch chan int64
+}
+
+func (ctx testContext) OnFlush(offset int64) {
+	ctx.ch <- offset
 }
 
 func newHarness(t *testing.T) *dbHarness {
 	hs := new(t)
-	hs.openFn = func(c conf.LeveldbConfig) pimco.Backend {
-		return Open(c, int32(0))
-	}
 	hs.tagIndex = NewTagIndex(hs.cfg.Path)
-	hs.cfg.TagIndex = hs.tagIndex
-	hs.db = hs.openFn(hs.cfg)
+	hs.openFn = func() pimco.Backend {
+		ctx := testContext{
+			TagIndex: hs.tagIndex,
+			ch:       hs.flushCh,
+		}
+		return Open(hs.cfg, int32(0), ctx)
+	}
+	hs.db = hs.openFn()
 	return hs
+}
+
+type clusterCtx struct {
+	ch chan int64
+}
+
+func (ctx clusterCtx) OnFlush(partition int32, offset int64) {
+	ctx.ch <- offset
 }
 
 func newCluster(t *testing.T) *dbHarness {
 	hs := new(t)
 	hs.cfg.NumPartitions = 2
 	hs.cfg.Partitions = []int32{0, 1}
-	hs.openFn = func(c conf.LeveldbConfig) pimco.Backend {
-		return NewCluster(hs.cfg)
+	hs.openFn = func() pimco.Backend {
+		return NewCluster(hs.cfg, clusterCtx{hs.flushCh})
 	}
-	hs.db = hs.openFn(hs.cfg)
+	hs.db = hs.openFn()
 	return hs
 }
 
 func withHarness(t *testing.T, fn func(*dbHarness)) {
 	for _, factory := range []func(t *testing.T) *dbHarness{newHarness, newCluster} {
+		//for _, factory := range []func(t *testing.T) *dbHarness{newHarness} {
 		hs := factory(t)
 		defer hs.Close()
 		fn(hs)
@@ -88,7 +101,7 @@ func withHarness(t *testing.T, fn func(*dbHarness)) {
 
 func (hs *dbHarness) reopenDB() {
 	hs.db.Close()
-	hs.db = hs.openFn(hs.cfg)
+	hs.db = hs.openFn()
 }
 
 func (hs *dbHarness) runReport(tag string, start time.Time, step int) []pimco.ReportLine {
@@ -122,7 +135,13 @@ func (hs *dbHarness) withSample(tag string, start time.Time, offset int64, ts in
 }
 
 func (hs *dbHarness) flush() int64 {
-	return <-hs.flushCh
+	select {
+	case offset := <-hs.flushCh:
+		return offset
+	case <-time.After(time.Second):
+		hs.t.Error("Timed out")
+	}
+	return 0
 }
 
 // check correct selection of last sample in the range

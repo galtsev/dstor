@@ -68,9 +68,7 @@ type LeveldbConfig struct {
 	Path          string
 	Opts          LeveldbOptions
 	TTL           string // sample would be removed on compaction after this period. format as time.Duration.Parse, eg. 600s
-	CompactBefore string `yaml:"compact_before"`
 	Batch         BatchConfig
-	TagIndex      interface{}
 	NumPartitions int
 	Partitions    []int32
 }
@@ -82,9 +80,8 @@ type MetricsConfig struct {
 }
 
 type BatchConfig struct {
-	BatchSize  int                                 `yaml:"batch_size"`
-	FlushDelay int                                 `yaml:"flush_delay"`
-	OnFlush    func(partition int32, offset int64) `yaml:""`
+	BatchSize  int `yaml:"batch_size"`
+	FlushDelay int `yaml:"flush_delay"`
 }
 
 type Config struct {

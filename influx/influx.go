@@ -20,16 +20,15 @@ type Influx struct {
 	partition int32
 }
 
-func New(cfg conf.InfluxConfig, partition int32) *Influx {
+func New(cfg conf.InfluxConfig, ctx pimco.BatchContext) *Influx {
 	w := Influx{
-		bpConfig:  client.BatchPointsConfig{Database: cfg.Database},
-		database:  cfg.Database,
-		partition: partition,
+		bpConfig: client.BatchPointsConfig{Database: cfg.Database},
+		database: cfg.Database,
 	}
 	conn, err := client.NewHTTPClient(client.HTTPConfig{Addr: cfg.URL})
 	Check(err)
 	w.conn = conn
-	w.writer = pimco.NewWriter(&w, cfg.Batch, partition)
+	w.writer = pimco.NewWriter(&w, cfg.Batch, ctx)
 	return &w
 }
 

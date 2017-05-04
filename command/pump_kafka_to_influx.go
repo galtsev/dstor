@@ -5,6 +5,7 @@
 package command
 
 import (
+	"dan/pimco"
 	"dan/pimco/conf"
 	"dan/pimco/influx"
 	"dan/pimco/kafka"
@@ -28,7 +29,7 @@ func PumpKafka2Influx(args []string) {
 
 // TODO Graceful cancelation
 func consumePartition(cfg conf.Config, partition int32) {
-	backend := influx.New(cfg.Influx, partition)
+	backend := influx.New(cfg.Influx, pimco.FakeContext{})
 
 	cnt := 0
 

@@ -16,14 +16,32 @@ type LeveldbCluster struct {
 	partitioner func(string) int32
 }
 
-func NewCluster(cfg conf.LeveldbConfig) *LeveldbCluster {
+type ClusterContext interface {
+	OnFlush(partition int32, offset int64)
+}
+
+type partitionContext struct {
+	*TagIndex
+	partition int32
+	ctx       ClusterContext
+}
+
+func (ctx partitionContext) OnFlush(offset int64) {
+	ctx.ctx.OnFlush(ctx.partition, offset)
+}
+
+func NewCluster(cfg conf.LeveldbConfig, ctx ClusterContext) *LeveldbCluster {
 	server := LeveldbCluster{
 		partitioner: pimco.MakePartitioner(cfg.NumPartitions),
 		tagIndex:    NewTagIndex(path.Join(cfg.Path, "tags")),
 	}
-	cfg.TagIndex = server.tagIndex
 	for _, p := range cfg.Partitions {
-		db := Open(cfg, p)
+		ctx := partitionContext{
+			TagIndex:  server.tagIndex,
+			partition: int32(p),
+			ctx:       ctx,
+		}
+		db := Open(cfg, p, ctx)
 		server.backends = append(server.backends, db)
 	}
 	return &server

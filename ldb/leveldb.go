@@ -17,11 +17,11 @@ import (
 var BigEndian = binary.BigEndian
 
 type DB struct {
-	db       *leveldb.DB
-	szr      serializer.Serializer
-	tagIndex *TagIndex
-	batch    leveldb.Batch
-	writer   *pimco.BatchWriter
+	db     *leveldb.DB
+	szr    serializer.Serializer
+	batch  leveldb.Batch
+	writer *pimco.BatchWriter
+	ctx    Context
 }
 
 func (db *DB) GetDB() *leveldb.DB {
@@ -32,7 +32,13 @@ func nowFunc() time.Time {
 	return time.Unix(0, pimco.GetLatest()).Add(-time.Duration(24) * time.Hour)
 }
 
-func Open(cfg conf.LeveldbConfig, partition int32) *DB {
+type Context interface {
+	OnFlush(offset int64)
+	Get(tag string) (int, bool)
+	GetOrCreate(tag string) int
+}
+
+func Open(cfg conf.LeveldbConfig, partition int32, ctx Context) *DB {
 	opts := opt.Options{
 		WriteBuffer:                   cfg.Opts.WriteBufferMb * opt.MiB,
 		CompactionTableSize:           cfg.Opts.CompactionTableSizeMb * opt.MiB,
@@ -46,16 +52,16 @@ func Open(cfg conf.LeveldbConfig, partition int32) *DB {
 	ldb, err := leveldb.OpenFile(partitionPath, &opts)
 	Check(err)
 	db := DB{
-		db:       ldb,
-		szr:      serializer.MsgPackSerializer{},
-		tagIndex: cfg.TagIndex.(*TagIndex),
+		db:  ldb,
+		szr: serializer.MsgPackSerializer{},
+		ctx: ctx,
 	}
-	db.writer = pimco.NewWriter(&db, cfg.Batch, partition)
+	db.writer = pimco.NewWriter(&db, cfg.Batch, ctx)
 	return &db
 }
 
 func (db *DB) Add(sample *model.Sample) {
-	tagIdx := db.tagIndex.GetOrCreate(sample.Tag)
+	tagIdx := db.ctx.GetOrCreate(sample.Tag)
 	key := db.MakeKey(tagIdx, sample.TS)
 	body := db.szr.Marshal(sample)
 	db.batch.Put(key, body)
@@ -89,7 +95,7 @@ func (db *DB) KeyTime(key []byte) int64 {
 
 func (db *DB) ReportOne(tag string, ts int64) (*model.Sample, bool) {
 	var sample model.Sample
-	tagIdx, ok := db.tagIndex.Get(tag)
+	tagIdx, ok := db.ctx.Get(tag)
 	if !ok {
 		return nil, false
 	}
