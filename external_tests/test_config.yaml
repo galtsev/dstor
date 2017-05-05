@@ -1,0 +1,9 @@
+kafka:
+  hosts:
+  - localhost:9092
+  topic: test
+  num_partitions: 4
+  partitions:
+  - 0
+  serializer: msgp
+  node_id: test

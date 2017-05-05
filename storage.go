@@ -32,16 +32,7 @@ type Backend interface {
 	Reporter
 }
 
-/*
-type FakeReporter struct{}
-
-func (r FakeReporter) Report(tag string, start, stop time.Time) []ReportLine {
-	return []ReportLine{}
+type OffsetStorage interface {
+	GetOffset(partition int32) int64
+	OnFlush(partition int32, offset int64)
 }
-
-type FakeStorage struct{}
-
-func (s FakeStorage) AddSample(sample *model.Sample, offset int64) {}
-
-func (s FakeStorage) Close() {}
-*/

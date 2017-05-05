@@ -17,7 +17,7 @@ type LeveldbCluster struct {
 }
 
 type ClusterContext interface {
-	OnFlush(partition int32, offset int64)
+	pimco.OffsetStorage
 }
 
 type partitionContext struct {

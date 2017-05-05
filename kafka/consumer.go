@@ -50,8 +50,8 @@ func ConsumePartition(cfg conf.KafkaConfig, partition int32, oneShot bool) chan 
 	return ch
 }
 
-func PartitionLoader(cfg conf.Config, partition int32, db pimco.Storage) {
-	for ksample := range ConsumePartition(cfg.Kafka, partition, false) {
+func PartitionLoader(cfg conf.KafkaConfig, partition int32, db pimco.Storage) {
+	for ksample := range ConsumePartition(cfg, partition, false) {
 		db.AddSample(&ksample.Sample, ksample.Offset)
 	}
 }

@@ -10,10 +10,11 @@ import (
 )
 
 type Injector struct {
-	cfg       conf.Config
-	generator pimco.Generator
-	storage   pimco.Storage
-	reporter  pimco.Reporter
+	cfg           conf.Config
+	generator     pimco.Generator
+	storage       pimco.Storage
+	reporter      pimco.Reporter
+	offsetStorage pimco.OffsetStorage
 }
 
 func New(cfg conf.Config) *Injector {
@@ -29,6 +30,13 @@ func (j *Injector) Generator() pimco.Generator {
 	return j.generator
 }
 
+func (j *Injector) OffsetStorage() pimco.OffsetStorage {
+	if j.OffsetStorage() == nil {
+		j.offsetStorage = kafka.NewFakeOffsetStorage()
+	}
+	return j.offsetStorage
+}
+
 func (j *Injector) Storage() pimco.Storage {
 	if j.storage == nil {
 		srv := j.cfg.Server
@@ -37,7 +45,7 @@ func (j *Injector) Storage() pimco.Storage {
 		} else {
 			switch srv.Storage {
 			case "leveldb":
-				j.storage = ldb.NewCluster(j.cfg.Leveldb)
+				j.storage = ldb.NewCluster(j.cfg.Leveldb, j.OffsetStorage())
 			case "kafka":
 				j.storage = kafka.NewCluster(j.cfg)
 			case "influx":
@@ -60,7 +68,7 @@ func (j *Injector) Reporter() pimco.Reporter {
 		} else {
 			switch srv.Reporter {
 			case "leveldb":
-				j.reporter = ldb.NewCluster(j.cfg.Leveldb)
+				j.reporter = ldb.NewCluster(j.cfg.Leveldb, j.OffsetStorage())
 			case "remote":
 				j.reporter = ldb.NewReporter(j.cfg)
 			case "influx":
