@@ -4,6 +4,7 @@ import (
 	. "dan/pimco/base"
 	"dan/pimco/conf"
 	"dan/pimco/injector"
+	"dan/pimco/kafka"
 	"dan/pimco/prom"
 	"dan/pimco/server"
 	"flag"
@@ -19,6 +20,9 @@ func Serve(args []string) {
 	log.Println(cfg)
 	inj := injector.New(cfg)
 	srv := server.NewServer(cfg.Server, inj.Storage(), inj.Reporter())
+	for _, p := range cfg.Server.ConsumePartitions {
+		go kafka.PartitionLoader(cfg.Kafka, int32(p), inj.Storage())
+	}
 	// serve metrics
 	prom.Setup(cfg.Metrics)
 	http.Handle("/metrics", promhttp.Handler())

@@ -31,8 +31,8 @@ func (j *Injector) Generator() pimco.Generator {
 }
 
 func (j *Injector) OffsetStorage() pimco.OffsetStorage {
-	if j.OffsetStorage() == nil {
-		j.offsetStorage = kafka.NewFakeOffsetStorage()
+	if j.offsetStorage == nil {
+		j.offsetStorage = kafka.NewOffsetStorage(j.cfg.Kafka)
 	}
 	return j.offsetStorage
 }

@@ -14,6 +14,7 @@ import (
 )
 
 type Server struct {
+	cfg      conf.ServerConfig
 	storage  pimco.Storage
 	reporter pimco.Reporter
 	json     serializer.Serializer
@@ -21,6 +22,7 @@ type Server struct {
 
 func NewServer(cfg conf.ServerConfig, storage pimco.Storage, reporter pimco.Reporter) *Server {
 	server := Server{
+		cfg:      cfg,
 		json:     serializer.NewSerializer("easyjson"),
 		storage:  storage,
 		reporter: reporter,
@@ -47,6 +49,11 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 }
 
 func (srv *Server) handleWrite(ctx *fasthttp.RequestCtx) {
+	// we either accept writes through http or consume kafka, not both
+	if len(srv.cfg.ConsumePartitions) > 0 {
+		ctx.NotFound()
+		return
+	}
 	var samples model.Samples
 	err := srv.json.Unmarshal(ctx.PostBody(), &samples)
 	if err != nil {

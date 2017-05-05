@@ -49,10 +49,11 @@ type ClientConfig struct {
 }
 
 type ServerConfig struct {
-	Addr       string
-	Storage    string
-	Reporter   string
-	Partitions []int32
+	Addr              string
+	Storage           string
+	Reporter          string
+	ConsumePartitions []int32
+	PartitionMap      map[int32][]string
 }
 
 type LeveldbOptions struct {
