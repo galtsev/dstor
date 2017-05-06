@@ -12,12 +12,13 @@ import (
 func Usage() {
 	fmt.Printf(`Usage: %s <cmd> <options>
 commands: 
+	standalone - start standalone server
+	storage-node - start storage node server (cluster mode)
+	proxy - start proxy node (cluster mode)
+
 	client - test http client,
 	gen - generate samples and write to backend,
-	serve - start http server that handle /write and /report requests using specified backend
-	receipt - start http server that handle /write requests and write to kafka
 	show-config - dump current config to stdout
-	kafka2flux - read from kafka, write to influxdb
 	topic-stats - read kafka topic, show some stats
 	query-reporter - get report data from reporter server
 `, os.Args[0])
@@ -38,8 +39,14 @@ func main() {
 	cmd := os.Args[1]
 	args := os.Args[2:]
 	switch cmd {
+	case "standalone":
+		command.Standalone(args)
+	case "storage-node":
+		command.StorageNode(args)
+	case "proxy":
+		command.Proxy(args)
+
 	case "client":
-		//client.Run(args)
 		timeIt(func() {
 			command.Client(args)
 		})
@@ -47,16 +54,11 @@ func main() {
 		timeIt(func() {
 			command.Gen(args)
 		})
-	case "serve":
-		command.Serve(args)
-		//command.QueryFlux(args)
 	case "query-reporter":
-		timeIt(func() { command.QueryReporter(args) })
-	// consume topic from kafka, write to influx
-	case "kafka2flux":
 		timeIt(func() {
-			command.PumpKafka2Influx(args)
+			command.QueryReporter(args)
 		})
+	// consume topic from kafka, write to influx
 	// generate messages and write to kafka
 	case "topic-stats":
 		command.TopicStats(args)

@@ -50,7 +50,7 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 
 func (srv *Server) handleWrite(ctx *fasthttp.RequestCtx) {
 	// we either accept writes through http or consume kafka, not both
-	if len(srv.cfg.ConsumePartitions) > 0 {
+	if srv.storage == nil {
 		ctx.NotFound()
 		return
 	}

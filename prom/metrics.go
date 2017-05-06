@@ -3,6 +3,9 @@ package prom
 import (
 	"dan/pimco/conf"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"log"
+	"net/http"
 	"time"
 )
 
@@ -48,6 +51,10 @@ func Setup(metricsConfig conf.MetricsConfig) {
 		requestTimeHist,
 		requestTimeSum,
 	)
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		log.Fatalln(http.ListenAndServe(cfg.Addr, nil))
+	}()
 }
 
 func SampleWrite(duration time.Duration) {

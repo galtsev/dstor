@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os"
 	"time"
 )
 
@@ -181,4 +182,19 @@ func LoadConfigEx(fs *flag.FlagSet, args ...string) Config {
 	Check(yaml.Unmarshal(data, cfg))
 	fs.Parse(args)
 	return *cfg
+}
+
+func Load(cfg *Config, args ...string) {
+	var fileName string
+	if fileName = os.Getenv("PIMCO_CONFIG"); fileName == "" {
+		for _, fn := range []string{"pimco.yaml", "/etc/pimco.yaml"} {
+			if _, err := os.Stat(fn); os.IsExist(err) {
+				fileName = fn
+				break
+			}
+		}
+	}
+	data, err := ioutil.ReadFile(fileName)
+	Check(err)
+	Check(yaml.Unmarshal(data, cfg))
 }
