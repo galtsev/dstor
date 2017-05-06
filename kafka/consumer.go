@@ -22,7 +22,7 @@ func ConsumePartition(cfg conf.KafkaConfig, partition int32, oneShot bool) chan 
 	if oneShot {
 		client, err := sarama.NewClient(cfg.Hosts, conf)
 		Check(err)
-		finalOffset, err = client.GetOffset(cfg.Topic, int32(0), sarama.OffsetNewest)
+		finalOffset, err = client.GetOffset(cfg.Topic, partition, sarama.OffsetNewest)
 		Check(err)
 		client.Close()
 	}

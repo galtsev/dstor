@@ -24,7 +24,6 @@ type KafkaConfig struct {
 	Partitions    []int32 // partitions to consume
 	Serializer    string
 	Batch         BatchConfig
-	NodeId        string `yaml:"node_id"`
 }
 
 type GenConfig struct {

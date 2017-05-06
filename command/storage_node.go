@@ -8,6 +8,7 @@ import (
 	"dan/pimco/prom"
 	"dan/pimco/server"
 	"flag"
+	"fmt"
 	"github.com/valyala/fasthttp"
 )
 
@@ -16,9 +17,14 @@ func StorageNode(args []string) {
 	conf.Load(&cfg, args...)
 	fs := flag.NewFlagSet("storagenode", flag.ExitOnError)
 	backendName := fs.String("backend", "leveldb", "Backend storage to use")
+	nodeId := fs.String("nodeId", "", "node id")
 	fs.Parse(args)
 
-	offsetStorage := kafka.NewOffsetStorage(cfg.Kafka)
+	if *nodeId == "" {
+		panic(fmt.Errorf("Missing node id"))
+	}
+
+	offsetStorage := kafka.NewOffsetStorage(*nodeId, cfg.Kafka)
 	backend := injector.MakeBackend(*backendName, cfg, offsetStorage)
 
 	for _, p := range cfg.Server.ConsumePartitions {

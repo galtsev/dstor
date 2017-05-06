@@ -17,9 +17,8 @@ func Gen(args []string) {
 		cfg.FilePath = *path
 	}
 	fmt.Println(cfg)
-	inj := injector.New(cfg)
-	storage := inj.Storage()
-	gen := inj.Generator()
+	storage := injector.MakeStorage(cfg.Gen.Backend, cfg, nil)
+	gen := pimco.NewGenerator(cfg.Gen)
 	progress := util.NewProgress(100000)
 
 	for gen.Next() {

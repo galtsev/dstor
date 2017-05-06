@@ -21,7 +21,7 @@ type OffsetStorage struct {
    1) Hang if topic don't exists, so, we panic here if topic not exists
    2) Only update offset if new offset is greater than previous one
 */
-func NewOffsetStorage(cfg conf.KafkaConfig) *OffsetStorage {
+func NewOffsetStorage(nodeId string, cfg conf.KafkaConfig) *OffsetStorage {
 	konf := sarama.NewConfig()
 	//konf.Consumer.Offsets.CommitInterval = time.Duration(10) * time.Millisecond
 	client, err := sarama.NewClient(cfg.Hosts, konf)
@@ -31,7 +31,7 @@ func NewOffsetStorage(cfg conf.KafkaConfig) *OffsetStorage {
 	if !strIn(topics, cfg.Topic) {
 		panic(fmt.Errorf("Topic %s not registered in Kafka", cfg.Topic))
 	}
-	om, err := sarama.NewOffsetManagerFromClient(cfg.NodeId, client)
+	om, err := sarama.NewOffsetManagerFromClient(nodeId, client)
 	Check(err)
 	return &OffsetStorage{
 		topic:  cfg.Topic,
