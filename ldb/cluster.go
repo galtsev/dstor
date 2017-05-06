@@ -36,12 +36,12 @@ func NewCluster(cfg conf.LeveldbConfig, ctx ClusterContext) *LeveldbCluster {
 		tagIndex:    NewTagIndex(path.Join(cfg.Path, "tags")),
 	}
 	for _, p := range cfg.Partitions {
-		ctx := partitionContext{
+		pctx := partitionContext{
 			TagIndex:  server.tagIndex,
 			partition: int32(p),
 			ctx:       ctx,
 		}
-		db := Open(cfg, p, ctx)
+		db := Open(cfg, p, pctx)
 		server.backends = append(server.backends, db)
 	}
 	return &server
