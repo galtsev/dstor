@@ -13,11 +13,11 @@ import (
 )
 
 func StorageNode(args []string) {
-	var cfg conf.Config
+	var cfg conf.Config = *conf.NewConfig()
 	conf.Load(&cfg, args...)
 	fs := flag.NewFlagSet("storagenode", flag.ExitOnError)
 	backendName := fs.String("backend", "leveldb", "Backend storage to use")
-	nodeId := fs.String("nodeId", "", "node id")
+	nodeId := fs.String("node-id", "", "node id")
 	fs.Parse(args)
 
 	if *nodeId == "" {
@@ -28,7 +28,7 @@ func StorageNode(args []string) {
 	backend := injector.MakeBackend(*backendName, cfg, offsetStorage)
 
 	for _, p := range cfg.Server.ConsumePartitions {
-		go kafka.PartitionLoader(cfg.Kafka, int32(p), backend)
+		go kafka.PartitionLoader(cfg.Kafka, int32(p), offsetStorage.GetOffset(int32(p)), backend)
 	}
 
 	// strage node don't accept samples through http, so storage is nil

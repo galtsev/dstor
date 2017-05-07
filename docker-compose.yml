@@ -24,11 +24,11 @@ services:
     ports:
       - "9092:9092"
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: 192.168.233.4
+      KAFKA_ADVERTISED_HOST_NAME: 192.168.0.2
       KAFKA_ADVERTISED_PORT: 9092
       KAFKA_BROKER_ID: 911
       KAFKA_CREATE_TOPICS: "test:4:1"
-      KAFKA_ZOOKEEPER_CONNECT: 192.168.233.4:2181
+      KAFKA_ZOOKEEPER_CONNECT: 192.168.0.2:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
     volumes:
       - /home/dan/data/kafka:/kafka

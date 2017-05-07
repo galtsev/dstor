@@ -28,6 +28,7 @@ func NewWriter(cfg conf.KafkaConfig, partition int32, ctx pimco.BatchContext) *W
 	conf := sarama.NewConfig()
 	conf.Producer.Partitioner = sarama.NewManualPartitioner
 	conf.Producer.Return.Successes = true
+	conf.Producer.Return.Errors = true
 	producer, err := sarama.NewSyncProducer(cfg.Hosts, conf)
 	Check(err)
 	w.producer = producer
@@ -57,6 +58,6 @@ func (w *Writer) AddSample(sample *model.Sample, offset int64) {
 }
 
 func (w *Writer) Close() {
-	w.Flush()
+	w.writer.Close()
 	w.producer.Close()
 }

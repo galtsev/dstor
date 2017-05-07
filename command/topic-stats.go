@@ -4,6 +4,7 @@ import (
 	"dan/pimco/conf"
 	"dan/pimco/kafka"
 	"fmt"
+	"github.com/Shopify/sarama"
 )
 
 func TopicStats(args []string) {
@@ -11,7 +12,7 @@ func TopicStats(args []string) {
 	fmt.Println(cfg)
 	cnt := 0
 	tags := make(map[string]int)
-	for ksample := range kafka.ConsumePartition(cfg.Kafka, 0, true) {
+	for ksample := range kafka.ConsumePartition(cfg.Kafka, 0, sarama.OffsetOldest, true) {
 		cnt++
 		tags[ksample.Sample.Tag] += 1
 	}

@@ -52,7 +52,7 @@ type ServerConfig struct {
 	Addr              string
 	Storage           string
 	Reporter          string
-	ConsumePartitions []int32
+	ConsumePartitions []int32 `yaml:"consume_partitions"`
 	PartitionMap      map[int32][]string
 }
 
