@@ -20,6 +20,7 @@ commands:
 	gen - generate samples and write to backend,
 	show-config - dump current config to stdout
 	topic-stats - read kafka topic, show some stats
+	leveldb-stats - show stats for configured local leveldb storage
 	query-reporter - get report data from reporter server
 `, os.Args[0])
 }

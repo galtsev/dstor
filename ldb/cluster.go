@@ -27,7 +27,9 @@ type partitionContext struct {
 }
 
 func (ctx partitionContext) OnFlush(offset int64) {
-	ctx.ctx.OnFlush(ctx.partition, offset)
+	if ctx.ctx != nil {
+		ctx.ctx.OnFlush(ctx.partition, offset)
+	}
 }
 
 func NewCluster(cfg conf.LeveldbConfig, ctx ClusterContext) *LeveldbCluster {

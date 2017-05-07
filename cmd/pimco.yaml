@@ -7,16 +7,18 @@ kafka:
   - localhost:9092
   topic: test
   num_partitions: 4
-  partitions:
-  - 0
+  partitions: [0, 1, 2, 3]
   serializer: msgp
+  batch:
+    batch_size: 100
+    flush_delay: 50
 gen:
   mode: "geom"
   start: 2017-04-10 00:00
-  end: 2017-04-16 00:00
-  count: 20000000
+  end: 2017-04-11 00:00
+  count: 10000000
   tags: 2000
-  backend: file
+  backend: leveldb
 #leveldb-standalone
 server:
   addr: localhost:8787
@@ -43,6 +45,8 @@ client:
   batch_size: 10
 leveldb:
   path: /tmp/leveldb
+  num_partitions: 4
+  partitions: [0, 1, 2, 3]
 batch:
   batch_size: 1000
 one_shot: false

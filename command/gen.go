@@ -10,12 +10,11 @@ import (
 )
 
 func Gen(args []string) {
+	var cfg conf.Config
+	conf.Load(&cfg, args...)
 	fs := flag.NewFlagSet("gen", flag.ExitOnError)
-	path := fs.String("path", "", "Output file name")
-	cfg := conf.LoadConfigEx(fs, args...)
-	if *path != "" {
-		cfg.FilePath = *path
-	}
+	fs.StringVar(&cfg.Gen.Backend, "backend", cfg.Gen.Backend, "backend")
+	fs.Parse(args)
 	fmt.Println(cfg)
 	storage := injector.MakeStorage(cfg.Gen.Backend, cfg, nil)
 	gen := pimco.NewGenerator(cfg.Gen)

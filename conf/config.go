@@ -71,7 +71,7 @@ type LeveldbConfig struct {
 	Opts          LeveldbOptions
 	TTL           string // sample would be removed on compaction after this period. format as time.Duration.Parse, eg. 600s
 	Batch         BatchConfig
-	NumPartitions int
+	NumPartitions int `yaml:"num_partitions"`
 	Partitions    []int32
 }
 
@@ -99,10 +99,8 @@ type Config struct {
 }
 
 func (cfg Config) String() string {
-	return fmt.Sprintf("Config<Influx.URL:%s/%s/%s; BatchSize: %d; Gen.Count: %d; FilePath:%s",
-		cfg.Influx.URL,
-		cfg.Influx.Database,
-		cfg.Influx.Measurement,
+	return fmt.Sprintf("Config<Gen.Backend: %s; Gen.Count: %d; FilePath:%s>",
+		cfg.Gen.Backend,
 		cfg.Gen.Count,
 		cfg.FilePath,
 	)
@@ -184,14 +182,18 @@ func LoadConfigEx(fs *flag.FlagSet, args ...string) Config {
 }
 
 func Load(cfg *Config, args ...string) {
-	var fileName string
-	if fileName = os.Getenv("PIMCO_CONFIG"); fileName == "" {
+	var fileName string = os.Getenv("PIMCO_CONFIG")
+	if fileName == "" {
 		for _, fn := range []string{"pimco.yaml", "/etc/pimco.yaml"} {
-			if _, err := os.Stat(fn); os.IsExist(err) {
+			if _, err := os.Stat(fn); !os.IsNotExist(err) {
+				fmt.Printf("found %s", fn)
 				fileName = fn
 				break
 			}
 		}
+	}
+	if fileName == "" {
+		panic(fmt.Errorf("Config file not found"))
 	}
 	data, err := ioutil.ReadFile(fileName)
 	Check(err)
