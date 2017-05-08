@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"github.com/samuel/go-zookeeper/zk"
 	"log"
+	"math/rand"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -16,21 +18,48 @@ type ReporterRec struct {
 }
 
 type Zoo struct {
-	conn *zk.Conn
-	root string
+	sync.Mutex
+	conn             *zk.Conn
+	root             string
+	reporterRegistry map[int32][]string
 }
 
 func New(servers []string) *Zoo {
 	conn, _, err := zk.Connect(servers, time.Duration(5)*time.Second)
 	Check(err)
-	return &Zoo{
+	zoo := &Zoo{
 		conn: conn,
 		root: "/pimco",
 	}
+	go zoo.watchReporters()
+	return zoo
 }
 
 func (z *Zoo) Close() {
 	z.conn.Close()
+}
+
+func (z *Zoo) watchReporters() {
+	for {
+		reg := make(map[int32][]string)
+		path := z.root + "/reporters"
+		nodes, _, ch, err := z.conn.ChildrenW(path)
+		Check(err)
+		for _, nodeName := range nodes {
+			data, _, err := z.conn.Get(path + "/" + nodeName)
+			Check(err)
+			var rec ReporterRec
+			Check(json.Unmarshal(data, &rec))
+			for _, partition := range rec.Partitions {
+				reg[partition] = append(reg[partition], rec.Addr)
+			}
+		}
+		z.Lock()
+		z.reporterRegistry = reg
+		z.Unlock()
+		// wait for changes
+		<-ch
+	}
 }
 
 func (z *Zoo) ensurePath(root string) {
@@ -60,4 +89,14 @@ func (z *Zoo) Register(host string, partitions []int32) {
 	path := base + "/" + util.NewUID()
 	_, err = z.conn.Create(path, data, zk.FlagEphemeral, acl)
 	Check(err)
+}
+
+func (z *Zoo) GetReporter(partition int32) string {
+	z.Lock()
+	defer z.Unlock()
+	nodes, ok := z.reporterRegistry[partition]
+	if !ok {
+		return ""
+	}
+	return nodes[rand.Intn(len(nodes))]
 }

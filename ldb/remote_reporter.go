@@ -4,27 +4,53 @@ import (
 	"dan/pimco"
 	"dan/pimco/api"
 	"dan/pimco/conf"
+	"sync"
 	"time"
 )
 
-type Reporter struct {
-	nodes       []*api.Client
-	partitioner func(string) int32
+type Registry interface {
+	GetReporter(partition int32) string
 }
 
-func NewReporter(cfg conf.Config) *Reporter {
+type Reporter struct {
+	sync.Mutex
+	nodes       map[string]*api.Client
+	partitioner func(string) int32
+	registry    Registry
+}
+
+func NewReporter(cfg conf.Config, registry Registry) *Reporter {
 	cluster := Reporter{
 		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
-	}
-	// TODO: get nodes from Zookeeper
-	for p := 0; p < cfg.Kafka.NumPartitions; p++ {
-		client := api.NewClient(cfg.Client)
-		cluster.nodes = append(cluster.nodes, client)
+		registry:    registry,
 	}
 	return &cluster
 }
 
+func (srv *Reporter) GetClient(partition int32) *api.Client {
+	srv.Lock()
+	defer srv.Unlock()
+	host := srv.registry.GetReporter(partition)
+	if host == "" {
+		return nil
+	}
+	client, ok := srv.nodes[host]
+	if !ok {
+		cfg := conf.ClientConfig{
+			Host: host,
+		}
+		client := api.NewClient(cfg)
+		srv.nodes[host] = client
+	}
+	return client
+}
+
 func (srv *Reporter) Report(tag string, start, stop time.Time) []pimco.ReportLine {
-	partition := srv.partitioner(tag)
-	return srv.nodes[partition].Report(tag, start, stop)
+	emptyReport := []pimco.ReportLine{}
+	client := srv.GetClient(srv.partitioner(tag))
+	if client == nil {
+		return emptyReport
+	} else {
+		return client.Report(tag, start, stop)
+	}
 }

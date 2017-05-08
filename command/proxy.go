@@ -4,8 +4,10 @@ import (
 	. "dan/pimco/base"
 	"dan/pimco/conf"
 	"dan/pimco/injector"
+	"dan/pimco/ldb"
 	"dan/pimco/prom"
 	"dan/pimco/server"
+	"dan/pimco/zoo"
 	"github.com/valyala/fasthttp"
 )
 
@@ -14,7 +16,10 @@ func Proxy(args []string) {
 	conf.Load(&cfg, args...)
 
 	storage := injector.MakeStorage("kafka", cfg, nil)
-	reporter := injector.MakeReporter("remote", cfg)
+
+	zk := zoo.New(cfg.Zookeeper.Servers)
+
+	reporter := ldb.NewReporter(cfg, zk)
 	srv := server.NewServer(cfg.Server, storage, reporter)
 	// serve metrics
 	prom.Setup(cfg.Metrics)

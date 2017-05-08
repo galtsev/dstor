@@ -35,13 +35,7 @@ func MakeStorage(name string, cfg conf.Config, offsetStorage pimco.OffsetStorage
 }
 
 func MakeReporter(name string, cfg conf.Config) (reporter pimco.Reporter) {
-	switch name {
-	case "remote":
-		reporter = ldb.NewReporter(cfg)
-	default:
-		reporter = MakeBackend(name, cfg, nil)
-	}
-	return
+	return MakeBackend(name, cfg, nil)
 }
 
 func NodeId(storage pimco.Storage) string {

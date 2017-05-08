@@ -220,6 +220,12 @@
 			"revisionTime": "2016-11-28T21:05:44Z"
 		},
 		{
+			"checksumSHA1": "egQy+ytQKjfBN1oRKQJ/pxIvjYc=",
+			"path": "github.com/samuel/go-zookeeper/zk",
+			"revision": "87e1bca4477a3cc767ca71be023ced183d74e538",
+			"revisionTime": "2016-09-02T21:22:55Z"
+		},
+		{
 			"checksumSHA1": "Q2V7Zs3diLmLfmfbiuLpSxETSuY=",
 			"path": "github.com/stretchr/testify/assert",
 			"revision": "976c720a22c8eb4eb6a0b4348ad85ad12491a506",
