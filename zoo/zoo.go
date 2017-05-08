@@ -2,6 +2,7 @@ package zoo
 
 import (
 	. "dan/pimco/base"
+	"dan/pimco/util"
 	"encoding/json"
 	"github.com/samuel/go-zookeeper/zk"
 	"log"
@@ -15,18 +16,16 @@ type ReporterRec struct {
 }
 
 type Zoo struct {
-	conn   *zk.Conn
-	root   string
-	nodeId string
+	conn *zk.Conn
+	root string
 }
 
-func New(servers []string, nodeId string) *Zoo {
+func New(servers []string) *Zoo {
 	conn, _, err := zk.Connect(servers, time.Duration(5)*time.Second)
 	Check(err)
 	return &Zoo{
-		conn:   conn,
-		root:   "/pimco",
-		nodeId: nodeId,
+		conn: conn,
+		root: "/pimco",
 	}
 }
 
@@ -52,13 +51,13 @@ func (z *Zoo) Register(host string, partitions []int32) {
 	base := z.root + "/reporters"
 	z.ensurePath(base)
 	acl := zk.WorldACL(zk.PermAll)
-	path := base + "/" + z.nodeId
 	rec := ReporterRec{
 		Addr:       host,
 		Partitions: partitions,
 	}
 	data, err := json.Marshal(rec)
 	Check(err)
+	path := base + "/" + util.NewUID()
 	_, err = z.conn.Create(path, data, zk.FlagEphemeral, acl)
 	Check(err)
 }

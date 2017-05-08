@@ -40,7 +40,7 @@ func StorageNode(args []string) {
 	// serve metrics
 	prom.Setup(cfg.Metrics)
 
-	zk := zoo.New(cfg.Zookeeper.Servers, nodeId)
+	zk := zoo.New(cfg.Zookeeper.Servers)
 	zk.Register(cfg.Server.AdvertizeHost, cfg.Server.ConsumePartitions)
 	defer zk.Close()
 

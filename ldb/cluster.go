@@ -6,9 +6,8 @@ import (
 	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/serializer"
-	"encoding/hex"
+	"dan/pimco/util"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"path"
 	"time"
@@ -47,9 +46,7 @@ func NewCluster(cfg conf.LeveldbConfig, ctx ClusterContext) *LeveldbCluster {
 	// get nodeId, create if missing
 	metaPath := path.Join(cfg.Path, "node_id")
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
-		var buf [16]byte
-		rand.Read(buf[:])
-		server.nodeId = hex.EncodeToString(buf[:])
+		server.nodeId = util.NewUID()
 		Check(ioutil.WriteFile(metaPath, []byte(server.nodeId), os.FileMode(0640)))
 	} else {
 		buf, err := ioutil.ReadFile(metaPath)

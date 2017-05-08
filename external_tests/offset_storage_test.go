@@ -3,7 +3,7 @@ package external_tests
 import (
 	"dan/pimco/conf"
 	"dan/pimco/kafka"
-	"encoding/hex"
+	"dan/pimco/util"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -25,9 +25,7 @@ func TestKafka_OffsetStorage(t *testing.T) {
 	N := 60
 	cfg := LoadConfig(t)
 	st := kafka.NewOffsetStorage(cfg.Kafka)
-	var buf [16]byte
-	rand.Read(buf[:])
-	nodeId := hex.EncodeToString(buf[:])
+	nodeId := util.NewUID()
 	st.SetNodeId(nodeId)
 	update := func(partition int32, offset *int64) {
 		*offset += rand.Int63n(30)
