@@ -3,7 +3,7 @@ package external_tests
 import (
 	"dan/pimco/conf"
 	"dan/pimco/kafka"
-	"fmt"
+	"encoding/hex"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -17,7 +17,6 @@ func LoadConfig(t *testing.T) *conf.Config {
 	data, err := ioutil.ReadFile("test_config.yaml")
 	assert.NoError(t, err)
 	assert.NoError(t, yaml.Unmarshal(data, &cfg))
-	cfg.Kafka.NodeId = fmt.Sprintf("%s-%d", cfg.Kafka.NodeId, rand.Intn(100000))
 	return &cfg
 }
 
@@ -26,6 +25,10 @@ func TestKafka_OffsetStorage(t *testing.T) {
 	N := 60
 	cfg := LoadConfig(t)
 	st := kafka.NewOffsetStorage(cfg.Kafka)
+	var buf [16]byte
+	rand.Read(buf[:])
+	nodeId := hex.EncodeToString(buf[:])
+	st.SetNodeId(nodeId)
 	update := func(partition int32, offset *int64) {
 		*offset += rand.Int63n(30)
 		st.OnFlush(partition, *offset)
@@ -42,6 +45,7 @@ func TestKafka_OffsetStorage(t *testing.T) {
 	}
 	st.Close()
 	st = kafka.NewOffsetStorage(cfg.Kafka)
+	st.SetNodeId(nodeId)
 	for i, partition := range partitions {
 		assert.Equal(t, offsets[i], st.GetOffset(partition))
 	}

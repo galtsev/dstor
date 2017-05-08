@@ -7,6 +7,7 @@ import (
 	"dan/pimco/kafka"
 	"dan/pimco/ldb"
 	"fmt"
+	"os"
 )
 
 func MakeBackend(name string, cfg conf.Config, offsetStorage pimco.OffsetStorage) (backend pimco.Backend) {
@@ -41,4 +42,16 @@ func MakeReporter(name string, cfg conf.Config) (reporter pimco.Reporter) {
 		reporter = MakeBackend(name, cfg, nil)
 	}
 	return
+}
+
+func NodeId(storage pimco.Storage) string {
+	if id, ok := storage.(pimco.NodeId); ok {
+		return id.NodeId()
+	} else {
+		nodeId := os.Getenv("PIMCO_NODE_ID")
+		if nodeId != "" {
+			return nodeId
+		}
+	}
+	panic(fmt.Errorf("NodeId not defined!"))
 }

@@ -32,6 +32,10 @@ type Backend interface {
 	Reporter
 }
 
+type NodeId interface {
+	NodeId() string
+}
+
 type OffsetStorage interface {
 	GetOffset(partition int32) int64
 	OnFlush(partition int32, offset int64)

@@ -7,6 +7,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -24,6 +25,10 @@ type KafkaConfig struct {
 	Partitions    []int32 // partitions to consume
 	Serializer    string
 	Batch         BatchConfig
+}
+
+type ZookeeperConfig struct {
+	Servers []string
 }
 
 type GenConfig struct {
@@ -53,7 +58,7 @@ type ServerConfig struct {
 	Storage           string
 	Reporter          string
 	ConsumePartitions []int32 `yaml:"consume_partitions"`
-	PartitionMap      map[int32][]string
+	AdvertizeHost     string
 }
 
 type LeveldbOptions struct {
@@ -87,15 +92,16 @@ type BatchConfig struct {
 }
 
 type Config struct {
-	Influx   InfluxConfig
-	Kafka    KafkaConfig
-	Gen      GenConfig
-	Server   ServerConfig
-	Client   ClientConfig
-	Metrics  MetricsConfig
-	Leveldb  LeveldbConfig
-	OneShot  bool   `yaml:"one_shot"`
-	FilePath string `yaml:"file_path"`
+	Influx    InfluxConfig
+	Kafka     KafkaConfig
+	Zookeeper ZookeeperConfig
+	Gen       GenConfig
+	Server    ServerConfig
+	Client    ClientConfig
+	Metrics   MetricsConfig
+	Leveldb   LeveldbConfig
+	OneShot   bool   `yaml:"one_shot"`
+	FilePath  string `yaml:"file_path"`
 }
 
 func (cfg Config) String() string {
@@ -174,10 +180,7 @@ func LoadConfig(args ...string) Config {
 
 func LoadConfigEx(fs *flag.FlagSet, args ...string) Config {
 	cfg := NewConfig()
-	data, err := ioutil.ReadFile("pimco.yaml")
-	Check(err)
-	Check(yaml.Unmarshal(data, cfg))
-	fs.Parse(args)
+	Load(cfg, args...)
 	return *cfg
 }
 
@@ -198,4 +201,13 @@ func Load(cfg *Config, args ...string) {
 	data, err := ioutil.ReadFile(fileName)
 	Check(err)
 	Check(yaml.Unmarshal(data, cfg))
+	zk_hosts := os.Getenv("PIMCO_ZK_HOST")
+	if zk_hosts != "" {
+		cfg.Zookeeper.Servers = strings.Split(zk_hosts, ",")
+	}
+	advertizeHost := os.Getenv("PIMCO_ADVERTIZE_HOST")
+	if advertizeHost != "" {
+		cfg.Server.AdvertizeHost = advertizeHost
+	}
+
 }

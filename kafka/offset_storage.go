@@ -10,6 +10,7 @@ import (
 
 type OffsetStorage struct {
 	lock   sync.Mutex
+	nodeId string
 	topic  string
 	client sarama.Client
 	om     sarama.OffsetManager
@@ -21,7 +22,7 @@ type OffsetStorage struct {
    1) Hang if topic don't exists, so, we panic here if topic not exists
    2) Only update offset if new offset is greater than previous one
 */
-func NewOffsetStorage(nodeId string, cfg conf.KafkaConfig) *OffsetStorage {
+func NewOffsetStorage(cfg conf.KafkaConfig) *OffsetStorage {
 	konf := sarama.NewConfig()
 	//konf.Consumer.Offsets.CommitInterval = time.Duration(10) * time.Millisecond
 	client, err := sarama.NewClient(cfg.Hosts, konf)
@@ -31,14 +32,15 @@ func NewOffsetStorage(nodeId string, cfg conf.KafkaConfig) *OffsetStorage {
 	if !strIn(topics, cfg.Topic) {
 		panic(fmt.Errorf("Topic %s not registered in Kafka", cfg.Topic))
 	}
-	om, err := sarama.NewOffsetManagerFromClient(nodeId, client)
-	Check(err)
 	return &OffsetStorage{
 		topic:  cfg.Topic,
 		client: client,
-		om:     om,
 		poms:   make(map[int32]sarama.PartitionOffsetManager),
 	}
+}
+
+func (s *OffsetStorage) SetNodeId(nodeId string) {
+	s.nodeId = nodeId
 }
 
 func (s *OffsetStorage) Close() {
@@ -53,6 +55,13 @@ func (s *OffsetStorage) GetPartitionOffsetManager(partition int32) sarama.Partit
 	var err error
 	s.lock.Lock()
 	defer s.lock.Unlock()
+	if s.nodeId == "" {
+		panic(fmt.Errorf("Node id not set"))
+	}
+	if s.om == nil {
+		s.om, err = sarama.NewOffsetManagerFromClient(s.nodeId, s.client)
+		Check(err)
+	}
 	pom, ok := s.poms[partition]
 	if !ok {
 		pom, err = s.om.ManagePartition(s.topic, partition)

@@ -2,9 +2,14 @@ package ldb
 
 import (
 	"dan/pimco"
+	. "dan/pimco/base"
 	"dan/pimco/conf"
 	"dan/pimco/model"
 	"dan/pimco/serializer"
+	"encoding/hex"
+	"io/ioutil"
+	"math/rand"
+	"os"
 	"path"
 	"time"
 )
@@ -14,6 +19,7 @@ type LeveldbCluster struct {
 	tagIndex    *TagIndex
 	json        serializer.Serializer
 	partitioner func(string) int32
+	nodeId      string
 }
 
 type ClusterContext interface {
@@ -37,6 +43,20 @@ func NewCluster(cfg conf.LeveldbConfig, ctx ClusterContext) *LeveldbCluster {
 		partitioner: pimco.MakePartitioner(cfg.NumPartitions),
 		tagIndex:    NewTagIndex(path.Join(cfg.Path, "tags")),
 	}
+
+	// get nodeId, create if missing
+	metaPath := path.Join(cfg.Path, "node_id")
+	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
+		var buf [16]byte
+		rand.Read(buf[:])
+		server.nodeId = hex.EncodeToString(buf[:])
+		Check(ioutil.WriteFile(metaPath, []byte(server.nodeId), os.FileMode(0640)))
+	} else {
+		buf, err := ioutil.ReadFile(metaPath)
+		Check(err)
+		server.nodeId = string(buf)
+	}
+
 	for _, p := range cfg.Partitions {
 		pctx := partitionContext{
 			TagIndex:  server.tagIndex,
@@ -67,4 +87,8 @@ func (srv *LeveldbCluster) Report(tag string, start, stop time.Time) []pimco.Rep
 
 func (srv *LeveldbCluster) Backends() []*DB {
 	return srv.backends
+}
+
+func (srv *LeveldbCluster) NodeId() string {
+	return srv.nodeId
 }
