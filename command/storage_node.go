@@ -45,10 +45,11 @@ func StorageNode(args []string) {
 	prom.Setup(cfg.Metrics)
 
 	// register itself as reporter as soon as all partition consumers come close enough to HighWaterMark
+	// we must keep zk connection open, as registration is ephemeral node
+	zk := zoo.New(cfg.Zookeeper.Servers)
+	defer zk.Close()
 	go func() {
 		wg.Wait()
-		zk := zoo.New(cfg.Zookeeper.Servers)
-		defer zk.Close()
 		zk.Register(cfg.Server.AdvertizeHost, partitions)
 		log.Printf("Registered as reporter for partitions %v", partitions)
 
