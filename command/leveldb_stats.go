@@ -74,7 +74,8 @@ func showStats(stats *stats) {
 }
 
 func LeveldbStats(args []string) {
-	cfg := conf.LoadConfig(args...)
+	cfg := conf.NewConfig()
+	conf.Load(cfg)
 	fmt.Println(cfg)
 	srv := ldb.NewCluster(cfg.Leveldb, nil)
 	stats := stats{

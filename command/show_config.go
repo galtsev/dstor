@@ -8,8 +8,9 @@ import (
 )
 
 func ShowConfig(args []string) {
-	config := conf.LoadConfig(args...)
-	data, err := yaml.Marshal(config)
+	cfg := conf.NewConfig()
+	conf.Load(cfg)
+	data, err := yaml.Marshal(cfg)
 	Check(err)
 	fmt.Println(string(data))
 }

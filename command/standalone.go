@@ -12,7 +12,7 @@ import (
 
 func Standalone(args []string) {
 	var cfg conf.Config
-	conf.Load(&cfg, args...)
+	conf.Load(&cfg)
 	fs := flag.NewFlagSet("standalone", flag.ExitOnError)
 	backendName := fs.String("backend", "leveldb", "Backend to use")
 	fs.Parse(args)

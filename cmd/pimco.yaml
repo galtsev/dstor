@@ -2,15 +2,18 @@ influx:
   url: http://localhost:8086
   database: test
   measurement: ms
+zookeeper:
+  servers:
+    - localhost:2181
 kafka:
   hosts:
   - localhost:9092
   topic: test
-  num_partitions: 4
+  num_partitions: 8
   partitions: [0, 1, 2, 3]
   serializer: msgp
   batch:
-    batch_size: 1000
+    batch_size: 200
     flush_delay: 50
 gen:
   mode: "geom"

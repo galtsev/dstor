@@ -13,11 +13,13 @@ import (
 
 func Proxy(args []string) {
 	var cfg conf.Config
-	conf.Load(&cfg, args...)
+	conf.Load(&cfg)
 
 	storage := injector.MakeStorage("kafka", cfg, nil)
 
 	zk := zoo.New(cfg.Zookeeper.Servers)
+	defer zk.Close()
+	zk.WatchReporters()
 
 	reporter := ldb.NewReporter(cfg, zk)
 	srv := server.NewServer(cfg.Server, storage, reporter)

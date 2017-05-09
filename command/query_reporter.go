@@ -12,12 +12,14 @@ import (
 )
 
 func QueryReporter(args []string) {
+	cfg := conf.NewConfig()
+	conf.Load(cfg)
 	fs := flag.NewFlagSet("query", flag.ExitOnError)
-	startStr := fs.String("start", "", "Start of reporting period, YYYY-MM-DD HH:MM")
-	endStr := fs.String("end", "", "End of reporting period, YYYY-MM-DD HH:MM")
+	startStr := fs.String("start", cfg.Gen.Start, "Start of reporting period, YYYY-MM-DD HH:MM")
+	endStr := fs.String("end", cfg.Gen.End, "End of reporting period, YYYY-MM-DD HH:MM")
 	bench := fs.Int("bench", 0, "Run N times, report accumulated time")
-	tag := fs.String("tag", "", "tag to report")
-	cfg := conf.LoadConfigEx(fs, args...)
+	tag := fs.String("tag", "tag1", "tag to report")
+	fs.Parse(args)
 	fmt.Println(cfg)
 	fmt.Printf("Report for period from %s to %s\n", *startStr, *endStr)
 	start, err := time.Parse(DATE_FORMAT, *startStr)

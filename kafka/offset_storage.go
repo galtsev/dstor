@@ -24,6 +24,7 @@ type OffsetStorage struct {
 */
 func NewOffsetStorage(cfg conf.KafkaConfig) *OffsetStorage {
 	konf := sarama.NewConfig()
+	konf.Consumer.Offsets.Initial = sarama.OffsetOldest
 	//konf.Consumer.Offsets.CommitInterval = time.Duration(10) * time.Millisecond
 	client, err := sarama.NewClient(cfg.Hosts, konf)
 	Check(err)

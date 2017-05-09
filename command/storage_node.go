@@ -10,11 +10,14 @@ import (
 	"dan/pimco/zoo"
 	"flag"
 	"github.com/valyala/fasthttp"
+	"log"
+	"sync"
 )
 
 func StorageNode(args []string) {
 	var cfg conf.Config = *conf.NewConfig()
-	conf.Load(&cfg, args...)
+	var wg sync.WaitGroup
+	conf.Load(&cfg)
 	fs := flag.NewFlagSet("storagenode", flag.ExitOnError)
 	backendName := fs.String("backend", "leveldb", "Backend storage to use")
 	fs.Parse(args)
@@ -28,11 +31,12 @@ func StorageNode(args []string) {
 	backend := injector.MakeBackend(*backendName, cfg, offsetStorage)
 	defer backend.Close()
 
-	nodeId := injector.NodeId(backend)
-	offsetStorage.SetNodeId(nodeId)
+	offsetStorage.SetNodeId(injector.NodeId(backend))
 
-	for _, p := range cfg.Server.ConsumePartitions {
-		go kafka.PartitionLoader(cfg.Kafka, int32(p), offsetStorage.GetOffset(int32(p)), backend)
+	partitions := cfg.Server.ConsumePartitions
+	wg.Add(len(partitions))
+	for _, partition := range partitions {
+		go kafka.PartitionLoader(cfg.Kafka, partition, offsetStorage.GetOffset(partition), backend, &wg)
 	}
 
 	// strage node don't accept samples through http, so storage is nil
@@ -40,9 +44,15 @@ func StorageNode(args []string) {
 	// serve metrics
 	prom.Setup(cfg.Metrics)
 
-	zk := zoo.New(cfg.Zookeeper.Servers)
-	zk.Register(cfg.Server.AdvertizeHost, cfg.Server.ConsumePartitions)
-	defer zk.Close()
+	// register itself as reporter as soon as all partition consumers come close enough to HighWaterMark
+	go func() {
+		wg.Wait()
+		zk := zoo.New(cfg.Zookeeper.Servers)
+		defer zk.Close()
+		zk.Register(cfg.Server.AdvertizeHost, partitions)
+		log.Printf("Registered as reporter for partitions %v", partitions)
+
+	}()
 
 	// TODO - handle graceful shutdown - drain save channels first
 	Check(fasthttp.ListenAndServe(cfg.Server.Addr, srv.Route))

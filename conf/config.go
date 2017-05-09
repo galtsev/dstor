@@ -2,10 +2,10 @@ package conf
 
 import (
 	. "dan/pimco/base"
-	"flag"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -25,6 +25,8 @@ type KafkaConfig struct {
 	Partitions    []int32 // partitions to consume
 	Serializer    string
 	Batch         BatchConfig
+	// register storage node if last consumed offset+DoneOffset>=HighWaterMark for this partition
+	DoneOffset int64
 }
 
 type ZookeeperConfig struct {
@@ -125,6 +127,7 @@ func NewConfig() *Config {
 			Partitions:    []int32{0},
 			Serializer:    "msgp",
 			Batch:         batch,
+			DoneOffset:    100,
 		},
 		Influx: InfluxConfig{
 			URL:         "http://192.168.0.2:8086",
@@ -173,30 +176,19 @@ func NewConfig() *Config {
 	return &cfg
 }
 
-func LoadConfig(args ...string) Config {
-	fs := flag.NewFlagSet("base", flag.ExitOnError)
-	return LoadConfigEx(fs, args...)
-}
-
-func LoadConfigEx(fs *flag.FlagSet, args ...string) Config {
-	cfg := NewConfig()
-	Load(cfg, args...)
-	return *cfg
-}
-
-func Load(cfg *Config, args ...string) {
+func Load(cfg *Config) {
 	var fileName string = os.Getenv("PIMCO_CONFIG")
 	if fileName == "" {
 		for _, fn := range []string{"pimco.yaml", "/etc/pimco.yaml"} {
 			if _, err := os.Stat(fn); !os.IsNotExist(err) {
-				fmt.Printf("found %s", fn)
+				log.Printf("found %s", fn)
 				fileName = fn
 				break
 			}
 		}
 	}
 	if fileName == "" {
-		panic(fmt.Errorf("Config file not found"))
+		log.Fatalf("Config file not found")
 	}
 	data, err := ioutil.ReadFile(fileName)
 	Check(err)

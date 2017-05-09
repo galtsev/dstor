@@ -11,7 +11,7 @@ import (
 
 func Gen(args []string) {
 	var cfg conf.Config
-	conf.Load(&cfg, args...)
+	conf.Load(&cfg)
 	fs := flag.NewFlagSet("gen", flag.ExitOnError)
 	fs.StringVar(&cfg.Gen.Backend, "backend", cfg.Gen.Backend, "backend")
 	fs.Parse(args)

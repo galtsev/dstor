@@ -31,7 +31,6 @@ func New(servers []string) *Zoo {
 		conn: conn,
 		root: "/pimco",
 	}
-	go zoo.watchReporters()
 	return zoo
 }
 
@@ -39,7 +38,7 @@ func (z *Zoo) Close() {
 	z.conn.Close()
 }
 
-func (z *Zoo) watchReporters() {
+func (z *Zoo) WatchReporters() {
 	for {
 		reg := make(map[int32][]string)
 		path := z.root + "/reporters"

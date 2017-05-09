@@ -43,10 +43,12 @@ func parseSteps(src string) []pstep {
 }
 
 func Client(args []string) {
+	cfg := conf.NewConfig()
+	conf.Load(cfg)
 	fs := flag.NewFlagSet("client", flag.ExitOnError)
 	concurrency := fs.Int("c", 1, "Concurrency")
 	pattern := fs.String("pattern", "10:1", "load pattern, list of steps in form <rate k*samples/second>:<step duration seconds>, separated by spaces")
-	cfg := conf.LoadConfigEx(fs, args...)
+	fs.Parse(args)
 	fmt.Println(cfg)
 	ch := make(chan model.Sample, 100)
 	mediator := make(chan int, 100)
