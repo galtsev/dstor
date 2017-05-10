@@ -144,9 +144,10 @@ func NewConfig() *Config {
 			Backend: "leveldb",
 		},
 		Server: ServerConfig{
-			Addr:     "localhost:8787",
-			Storage:  "leveldb",
-			Reporter: "leveldb",
+			Addr:          "0.0.0.0:8787",
+			Storage:       "leveldb",
+			Reporter:      "leveldb",
+			AdvertizeHost: "localhost:8787",
 		},
 		Metrics: MetricsConfig{
 			Addr:       ":8789",
@@ -158,7 +159,7 @@ func NewConfig() *Config {
 			BatchSize: 10,
 		},
 		Leveldb: LeveldbConfig{
-			Path: "/home/dan/data/leveldb",
+			Path: "/mnt/leveldb",
 			Opts: LeveldbOptions{
 				WriteBufferMb:                 64,
 				CompactionTableSizeMb:         4,
@@ -196,6 +197,10 @@ func Load(cfg *Config) {
 	zk_hosts := os.Getenv("PIMCO_ZK_HOST")
 	if zk_hosts != "" {
 		cfg.Zookeeper.Servers = strings.Split(zk_hosts, ",")
+	}
+	kafka_hosts := os.Getenv("PIMCO_KAFKA_HOST")
+	if kafka_hosts != "" {
+		cfg.Kafka.Hosts = strings.Split(kafka_hosts, ",")
 	}
 	advertizeHost := os.Getenv("PIMCO_ADVERTIZE_HOST")
 	if advertizeHost != "" {

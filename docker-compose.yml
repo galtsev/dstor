@@ -24,12 +24,26 @@ services:
     ports:
       - "9092:9092"
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: 192.168.0.2
+      KAFKA_ADVERTISED_HOST_NAME: ${EXPOSE_IP}
       KAFKA_ADVERTISED_PORT: 9092
       KAFKA_BROKER_ID: 911
       KAFKA_CREATE_TOPICS: "test:4:1"
-      KAFKA_ZOOKEEPER_CONNECT: 192.168.0.2:2181
+      KAFKA_ZOOKEEPER_CONNECT: ${EXPOSE_IP}:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
     volumes:
       - /home/dan/data/kafka:/kafka
+    network_mode: bridge
+
+  node0:
+    container_name: node0
+    image: pimco
+    command: cmd storage-node
+    ports:
+      - "8787:8787"
+    environment:
+      PIMCO_ZK_HOST: ${EXPOSE_IP}:2181
+      PIMCO_KAFKA_HOST: ${EXPOSE_IP}:9092
+      PIMCO_ADVERTIZE_HOST: ${EXPOSE_IP}:8787
+    volumes:
+      - /home/dan/data/leveldb-docker:/mnt/leveldb
     network_mode: bridge
