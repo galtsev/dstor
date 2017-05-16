@@ -99,8 +99,9 @@ func (db *DB) ReportOne(tag string, ts int64) (*model.Sample, bool) {
 	if !ok {
 		return nil, false
 	}
-	key := db.MakeKey(tagIdx, ts)
-	iter := db.db.NewIterator(&util.Range{Limit: key}, nil)
+	start := db.MakeKey(tagIdx, int64(0))
+	limit := db.MakeKey(tagIdx, ts)
+	iter := db.db.NewIterator(&util.Range{Start: start, Limit: limit}, nil)
 	if !iter.Last() {
 		return nil, false
 	}
