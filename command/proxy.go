@@ -12,7 +12,7 @@ import (
 )
 
 func Proxy(args []string) {
-	var cfg conf.Config
+	cfg := *conf.NewConfig()
 	conf.Load(&cfg)
 
 	storage := injector.MakeStorage("kafka", cfg, nil)
