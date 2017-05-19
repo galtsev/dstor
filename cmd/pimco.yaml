@@ -17,9 +17,9 @@ kafka:
     flush_delay: 50
 gen:
   mode: "geom"
-  start: 2017-04-11 00:00
-  end: 2017-04-13 00:00
-  count: 20000000
+  start: 2017-05-18 00:00
+  end: 2017-05-19 00:00
+  count: 2000000
   tags: 2000
   backend: kafka
 #leveldb-standalone

@@ -6,8 +6,8 @@ import (
 )
 
 type ReportLine struct {
-	TS     int64
-	Values [10]float64
+	TS     int64       `json:"time"`
+	Values [10]float64 `json:"values"`
 }
 
 func ReportLineFromSample(sample *model.Sample) *ReportLine {

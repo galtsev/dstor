@@ -10,6 +10,8 @@ import (
 	"dan/pimco/serializer"
 	"encoding/json"
 	"github.com/valyala/fasthttp"
+	"log"
+	"strconv"
 	"time"
 )
 
@@ -40,12 +42,18 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 	case "/report":
 		srv.handleReport(ctx)
 		path = "report"
+	case "/ping":
+		srv.handlePing(ctx)
 	default:
 		ctx.NotFound()
 	}
 	if path != "" {
 		prom.RequestTime(path, time.Now().Sub(start))
 	}
+}
+
+func (srv *Server) handlePing(ctx *fasthttp.RequestCtx) {
+	ctx.SetBody([]byte("pong"))
 }
 
 func (srv *Server) handleWrite(ctx *fasthttp.RequestCtx) {
@@ -66,16 +74,27 @@ func (srv *Server) handleWrite(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }
 
+func toInt64(data []byte) int64 {
+	v, err := strconv.ParseInt(string(data), 10, 64)
+	Check(err)
+	return v
+}
+
 func (srv *Server) handleReport(ctx *fasthttp.RequestCtx) {
-	var req phttp.ReportRequest
-	err := json.Unmarshal(ctx.PostBody(), &req)
-	if err != nil {
-		ctx.Error(err.Error(), fasthttp.StatusBadRequest)
-		return
+	args := ctx.QueryArgs()
+	log.Println(args)
+	start := toInt64(args.Peek("start"))
+	end := toInt64(args.Peek("end"))
+	tag := string(args.Peek("tag"))
+	resp := phttp.ReportResponse{
+		Tag:   tag,
+		Start: start,
+		End:   end,
 	}
-	start, stop := req.Period()
-	lines := srv.reporter.Report(req.Tag, start, stop)
-	body, err := json.Marshal(lines)
+	startTime := time.Unix(0, start)
+	endTime := time.Unix(0, end)
+	resp.Samples = srv.reporter.Report(tag, startTime, endTime)
+	body, err := json.Marshal(resp)
 	Check(err)
 	ctx.SetBody(body)
 	ctx.SetContentType("application/json")
