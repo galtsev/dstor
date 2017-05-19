@@ -24,12 +24,12 @@ func (z *Sample) DecodeMsg(dc *msgp.Reader) (err error) {
 			return
 		}
 		switch msgp.UnsafeString(field) {
-		case "Tag":
+		case "tag":
 			z.Tag, err = dc.ReadString()
 			if err != nil {
 				return
 			}
-		case "Values":
+		case "values":
 			var zbai uint32
 			zbai, err = dc.ReadArrayHeader()
 			if err != nil {
@@ -45,7 +45,7 @@ func (z *Sample) DecodeMsg(dc *msgp.Reader) (err error) {
 					return
 				}
 			}
-		case "TS":
+		case "ts":
 			z.TS, err = dc.ReadInt64()
 			if err != nil {
 				return
@@ -63,8 +63,8 @@ func (z *Sample) DecodeMsg(dc *msgp.Reader) (err error) {
 // EncodeMsg implements msgp.Encodable
 func (z *Sample) EncodeMsg(en *msgp.Writer) (err error) {
 	// map header, size 3
-	// write "Tag"
-	err = en.Append(0x83, 0xa3, 0x54, 0x61, 0x67)
+	// write "tag"
+	err = en.Append(0x83, 0xa3, 0x74, 0x61, 0x67)
 	if err != nil {
 		return err
 	}
@@ -72,8 +72,8 @@ func (z *Sample) EncodeMsg(en *msgp.Writer) (err error) {
 	if err != nil {
 		return
 	}
-	// write "Values"
-	err = en.Append(0xa6, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x73)
+	// write "values"
+	err = en.Append(0xa6, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73)
 	if err != nil {
 		return err
 	}
@@ -87,8 +87,8 @@ func (z *Sample) EncodeMsg(en *msgp.Writer) (err error) {
 			return
 		}
 	}
-	// write "TS"
-	err = en.Append(0xa2, 0x54, 0x53)
+	// write "ts"
+	err = en.Append(0xa2, 0x74, 0x73)
 	if err != nil {
 		return err
 	}
@@ -103,17 +103,17 @@ func (z *Sample) EncodeMsg(en *msgp.Writer) (err error) {
 func (z *Sample) MarshalMsg(b []byte) (o []byte, err error) {
 	o = msgp.Require(b, z.Msgsize())
 	// map header, size 3
-	// string "Tag"
-	o = append(o, 0x83, 0xa3, 0x54, 0x61, 0x67)
+	// string "tag"
+	o = append(o, 0x83, 0xa3, 0x74, 0x61, 0x67)
 	o = msgp.AppendString(o, z.Tag)
-	// string "Values"
-	o = append(o, 0xa6, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x73)
+	// string "values"
+	o = append(o, 0xa6, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73)
 	o = msgp.AppendArrayHeader(o, 10)
 	for zxvk := range z.Values {
 		o = msgp.AppendFloat64(o, z.Values[zxvk])
 	}
-	// string "TS"
-	o = append(o, 0xa2, 0x54, 0x53)
+	// string "ts"
+	o = append(o, 0xa2, 0x74, 0x73)
 	o = msgp.AppendInt64(o, z.TS)
 	return
 }
@@ -134,12 +134,12 @@ func (z *Sample) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			return
 		}
 		switch msgp.UnsafeString(field) {
-		case "Tag":
+		case "tag":
 			z.Tag, bts, err = msgp.ReadStringBytes(bts)
 			if err != nil {
 				return
 			}
-		case "Values":
+		case "values":
 			var zajw uint32
 			zajw, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
@@ -155,7 +155,7 @@ func (z *Sample) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
-		case "TS":
+		case "ts":
 			z.TS, bts, err = msgp.ReadInt64Bytes(bts)
 			if err != nil {
 				return
