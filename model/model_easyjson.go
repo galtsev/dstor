@@ -35,7 +35,9 @@ func easyjsonC80ae7adDecodeDanPimcoModel(in *jlexer.Lexer, out *Samples) {
 		}
 		for !in.IsDelim(']') {
 			var v1 Sample
-			(v1).UnmarshalEasyJSON(in)
+			if data := in.Raw(); in.Ok() {
+				in.AddError((v1).UnmarshalJSON(data))
+			}
 			*out = append(*out, v1)
 			in.WantComma()
 		}
@@ -54,7 +56,7 @@ func easyjsonC80ae7adEncodeDanPimcoModel(out *jwriter.Writer, in Samples) {
 			if v2 > 0 {
 				out.RawByte(',')
 			}
-			(v3).MarshalEasyJSON(out)
+			out.Raw((v3).MarshalJSON())
 		}
 		out.RawByte(']')
 	}
@@ -102,9 +104,9 @@ func easyjsonC80ae7adDecodeDanPimcoModel1(in *jlexer.Lexer, out *Sample) {
 			continue
 		}
 		switch key {
-		case "Tag":
+		case "tag":
 			out.Tag = string(in.String())
-		case "Values":
+		case "values":
 			if in.IsNull() {
 				in.Skip()
 			} else {
@@ -121,7 +123,7 @@ func easyjsonC80ae7adDecodeDanPimcoModel1(in *jlexer.Lexer, out *Sample) {
 				}
 				in.Delim(']')
 			}
-		case "TS":
+		case "ts":
 			out.TS = int64(in.Int64())
 		default:
 			in.SkipRecursive()
@@ -141,13 +143,13 @@ func easyjsonC80ae7adEncodeDanPimcoModel1(out *jwriter.Writer, in Sample) {
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"Tag\":")
+	out.RawString("\"tag\":")
 	out.String(string(in.Tag))
 	if !first {
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"Values\":")
+	out.RawString("\"values\":")
 	out.RawByte('[')
 	for v5 := range in.Values {
 		if v5 > 0 {
@@ -160,7 +162,7 @@ func easyjsonC80ae7adEncodeDanPimcoModel1(out *jwriter.Writer, in Sample) {
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"TS\":")
+	out.RawString("\"ts\":")
 	out.Int64(int64(in.TS))
 	out.RawByte('}')
 }

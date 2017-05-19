@@ -1,4 +1,4 @@
-//go:generate easyjson $GOFILE
+//go:generate easyjson -snake_case $GOFILE
 //go:generate msgp
 package model
 
