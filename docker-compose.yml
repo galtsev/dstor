@@ -36,7 +36,7 @@ services:
 
   node0:
     container_name: node0
-    image: pimco
+    image: galtsev/pimco
     command: cmd storage-node
     ports:
       - "8787:8787"
@@ -46,4 +46,14 @@ services:
       PIMCO_ADVERTIZE_HOST: ${EXPOSE_IP}:8787
     volumes:
       - /home/dan/data/leveldb-docker:/mnt/leveldb
+    network_mode: bridge
+
+  standalone:
+    container_name: pimco
+    image: galtsev/pimco
+    command: cmd standalone
+    ports:
+      - "8787:8787"
+    volumes:
+      - /data/leveldb:/mnt/leveldb
     network_mode: bridge
