@@ -1,7 +1,6 @@
 package api
 
 import (
-	"bytes"
 	"dan/pimco"
 	. "dan/pimco/base"
 	"dan/pimco/conf"
@@ -13,6 +12,8 @@ import (
 	"github.com/valyala/fasthttp"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -32,24 +33,35 @@ func NewClient(cfg conf.ClientConfig) *Client {
 	return &client
 }
 
+func timeToArg(t time.Time) string {
+	return strconv.Itoa(int(t.UnixNano()))
+}
+
 func (c *Client) Report(tag string, start, stop time.Time) []pimco.ReportLine {
-	reqData := phttp.ReportRequest{
-		Tag:   tag,
-		Start: start.Format(DATE_FORMAT_LONG),
-		End:   stop.Format(DATE_FORMAT_LONG),
-	}
-	body, err := json.Marshal(reqData)
+	args := url.Values{}
+	args.Set("tag", tag)
+	args.Set("start", timeToArg(start))
+	args.Set("end", timeToArg(stop))
+	url, _ := url.Parse(c.reportURL)
+	url.RawQuery = args.Encode()
+	// reqData := phttp.ReportRequest{
+	// 	Tag:   tag,
+	// 	Start: start.Format(DATE_FORMAT_LONG),
+	// 	End:   stop.Format(DATE_FORMAT_LONG),
+	// }
+	// body, err := json.Marshal(reqData)
+	// Check(err)
+	// resp, err := http.Post(c.reportURL, "application/json", bytes.NewBuffer(body))
+	resp, err := http.Get(url.String())
 	Check(err)
-	resp, err := http.Post(c.reportURL, "application/json", bytes.NewBuffer(body))
-	Check(err)
-	if resp.StatusCode >= 300 {
+	if resp.StatusCode >= 400 {
 		panic(fmt.Errorf("Bad response code %d: %s", resp.StatusCode, resp.Status))
 	}
-	var respData []pimco.ReportLine
+	var respData phttp.ReportResponse
 	respBody, err := ioutil.ReadAll(resp.Body)
 	Check(err)
 	Check(json.Unmarshal(respBody, &respData))
-	return respData
+	return respData.Samples
 }
 
 func (c *Client) Add(sample *model.Sample) {

@@ -48,8 +48,6 @@ client:
 leveldb:
   num_partitions: 4
   partitions: [0, 1, 2, 3]
-batch:
-  batch_size: 1000
 one_shot: false
 file_path: "/home/dan/data/generated.msgp"
 

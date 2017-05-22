@@ -16,7 +16,7 @@ func Mediate(ch chan int, rate int, resolution time.Duration, duration *time.Dur
 	}
 	for {
 		<-t.C
-		ch <- rate * int(resolution/time.Second)
+		ch <- rate * int(resolution) / int(time.Second)
 		if !finish.IsZero() && time.Now().After(finish) {
 			break
 		}

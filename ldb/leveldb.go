@@ -118,9 +118,9 @@ func (db *DB) Report(tag string, start, end time.Time) []pimco.ReportLine {
 		sample, ok := db.ReportOne(tag, ts+step)
 		if !ok {
 			sample = prevSample
-		} else {
-			prevSample = sample
 		}
+		sample.TS = ts
+		prevSample = sample
 		resp = append(resp, *pimco.ReportLineFromSample(sample))
 	}
 	return resp

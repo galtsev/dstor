@@ -47,20 +47,23 @@ func Client(args []string) {
 	conf.Load(cfg)
 	fs := flag.NewFlagSet("client", flag.ExitOnError)
 	concurrency := fs.Int("c", 1, "Concurrency")
-	pattern := fs.String("pattern", "10:1", "load pattern, list of steps in form <rate k*samples/second>:<step duration seconds>, separated by spaces")
+	fs.StringVar(&cfg.Client.Host, "host", "localhost:8787", "server host:port")
+	rate := fs.Int("rate", 10, "request rate k*samples/sec")
+	//pattern := fs.String("pattern", "10:1", "load pattern, list of steps in form <rate k*samples/second>:<step duration seconds>, separated by spaces")
 	fs.Parse(args)
 	fmt.Println(cfg)
 	ch := make(chan model.Sample, 100)
-	mediator := make(chan int, 100)
-	steps := parseSteps(*pattern)
-	// run mediator
-	go func() {
-		for {
-			for _, step := range steps {
-				util.Mediate(mediator, step.r, time.Duration(50)*time.Millisecond, &step.d)
-			}
-		}
-	}()
+	mediatorCh := make(chan int, 10)
+	go util.Mediate(mediatorCh, *rate*1000, time.Duration(50)*time.Millisecond, nil)
+	// steps := parseSteps(*pattern)
+	// // run mediator
+	// go func() {
+	// 	for {
+	// 		for _, step := range steps {
+	// 			util.Mediate(mediator, step.r, time.Duration(50)*time.Millisecond, &step.d)
+	// 		}
+	// 	}
+	// }()
 	var wg sync.WaitGroup
 	for i := 0; i < *concurrency; i++ {
 		wg.Add(1)
@@ -71,10 +74,14 @@ func Client(args []string) {
 	}
 	gen := pimco.NewGenerator(cfg.Gen)
 	progress := util.NewProgress(100000)
-	for {
-		n := <-mediator
+	var proceed bool = true
+	for proceed {
+		n := <-mediatorCh
 		for i := 0; i < n; i++ {
-			gen.Next()
+			proceed = gen.Next()
+			if !proceed {
+				break
+			}
 			ch <- *gen.Sample()
 			progress.Step()
 		}

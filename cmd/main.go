@@ -22,6 +22,7 @@ commands:
 	topic-stats - read kafka topic, show some stats
 	leveldb-stats - show stats for configured local leveldb storage
 	query-reporter - get report data from reporter server
+	check-report
 `, os.Args[0])
 }
 
@@ -59,6 +60,8 @@ func main() {
 		timeIt(func() {
 			command.QueryReporter(args)
 		})
+	case "check-report":
+		command.CheckReport(args)
 	// consume topic from kafka, write to influx
 	// generate messages and write to kafka
 	case "topic-stats":

@@ -56,4 +56,4 @@ services:
       - "8787:8787"
     volumes:
       - /data/leveldb:/mnt/leveldb
-    network_mode: bridge
+    network_mode: host
