@@ -36,10 +36,10 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 	start := time.Now()
 	var path string
 	switch string(ctx.Path()) {
-	case "/write":
+	case "/save":
 		srv.handleWrite(ctx)
 		path = "write"
-	case "/report":
+	case "/api":
 		srv.handleReport(ctx)
 		path = "report"
 	case "/ping":
@@ -62,15 +62,13 @@ func (srv *Server) handleWrite(ctx *fasthttp.RequestCtx) {
 		ctx.NotFound()
 		return
 	}
-	var samples model.Samples
-	err := srv.json.Unmarshal(ctx.PostBody(), &samples)
+	var sample model.Sample
+	err := srv.json.Unmarshal(ctx.PostBody(), &sample)
 	if err != nil {
 		ctx.Error(err.Error(), fasthttp.StatusBadRequest)
 		return
 	}
-	for _, sample := range samples {
-		srv.storage.AddSample(&sample, 0)
-	}
+	srv.storage.AddSample(&sample, 0)
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }
 

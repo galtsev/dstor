@@ -123,7 +123,7 @@ func easyjsonC80ae7adDecodeDanPimcoModel1(in *jlexer.Lexer, out *Sample) {
 				}
 				in.Delim(']')
 			}
-		case "ts":
+		case "time":
 			out.TS = int64(in.Int64())
 		default:
 			in.SkipRecursive()
@@ -162,7 +162,7 @@ func easyjsonC80ae7adEncodeDanPimcoModel1(out *jwriter.Writer, in Sample) {
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"ts\":")
+	out.RawString("\"time\":")
 	out.Int64(int64(in.TS))
 	out.RawByte('}')
 }

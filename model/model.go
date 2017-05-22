@@ -8,7 +8,7 @@ type Sample struct {
 	// TODO convert to array
 	Values [10]float64 `msg:"values"`
 	// timestamp in nanoseconds
-	TS int64 `msg:"ts"`
+	TS int64 `msg:"ts" json:"time"`
 }
 
 //easyjson:json
