@@ -4,21 +4,24 @@ import (
 	"time"
 )
 
-/* Send ch <- rate*resolution/time.Second every resolution until *duration passed.
-   if duration==nil, run indefinitely
-*/
-func Mediate(ch chan int, rate int, resolution time.Duration, duration *time.Duration) {
-	t := time.NewTicker(resolution)
-	defer t.Stop()
-	var finish time.Time
-	if duration != nil {
-		finish = time.Now().Add(*duration)
+type Mediator struct {
+	last time.Time
+	rate int
+	step time.Duration
+}
+
+func NewMediator(rate int, step time.Duration) *Mediator {
+	return &Mediator{
+		last: time.Now(),
+		rate: rate,
+		step: step,
 	}
-	for {
-		<-t.C
-		ch <- rate * int(resolution) / int(time.Second)
-		if !finish.IsZero() && time.Now().After(finish) {
-			break
-		}
-	}
+}
+
+func (m *Mediator) Next() int {
+	now := time.Now()
+	next := m.last.Add(m.step)
+	time.Sleep(next.Sub(now))
+	m.last = time.Now()
+	return m.rate * int(m.step) / int(time.Second)
 }
