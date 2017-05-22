@@ -23,6 +23,7 @@ func NewReporter(cfg conf.Config, registry Registry) *Reporter {
 	cluster := Reporter{
 		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
 		registry:    registry,
+		nodes:       make(map[string]*api.Client),
 	}
 	return &cluster
 }

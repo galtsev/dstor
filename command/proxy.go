@@ -19,7 +19,7 @@ func Proxy(args []string) {
 
 	zk := zoo.New(cfg.Zookeeper.Servers)
 	defer zk.Close()
-	zk.WatchReporters()
+	go zk.WatchReporters()
 
 	reporter := ldb.NewReporter(cfg, zk)
 	srv := server.NewServer(cfg.Server, storage, reporter)

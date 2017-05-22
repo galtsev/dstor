@@ -16,7 +16,7 @@ services:
     image: wurstmeister/zookeeper
     ports:
       - "2181:2181"
-    network_mode: bridge
+    network_mode: host
 
   kafka:
     container_name: kafka
@@ -31,22 +31,46 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: ${EXPOSE_IP}:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
     volumes:
-      - /home/dan/data/kafka:/kafka
-    network_mode: bridge
+      - /data/kafka:/kafka
+    network_mode: host
 
   node0:
     container_name: node0
     image: galtsev/pimco
-    command: cmd storage-node
+    command: cmd storage-node -partitions 0,1,2,3
     ports:
-      - "8787:8787"
+      - "8780:8787"
     environment:
       PIMCO_ZK_HOST: ${EXPOSE_IP}:2181
       PIMCO_KAFKA_HOST: ${EXPOSE_IP}:9092
-      PIMCO_ADVERTIZE_HOST: ${EXPOSE_IP}:8787
+      PIMCO_ADVERTIZE_HOST: ${EXPOSE_IP}:8780
     volumes:
-      - /home/dan/data/leveldb-docker:/mnt/leveldb
+      - /data/leveldb0:/mnt/leveldb
     network_mode: bridge
+
+  node1:
+    container_name: node1
+    image: galtsev/pimco
+    command: cmd storage-node -partitions 4,5,6,7
+    ports:
+      - "8781:8787"
+    environment:
+      PIMCO_ZK_HOST: ${EXPOSE_IP}:2181
+      PIMCO_KAFKA_HOST: ${EXPOSE_IP}:9092
+      PIMCO_ADVERTIZE_HOST: ${EXPOSE_IP}:8781
+    volumes:
+      - /data/leveldb1:/mnt/leveldb
+    network_mode: bridge
+
+
+  proxy:
+    container_name: proxy
+    image: galtsev/pimco
+    command: cmd proxy
+    environment:
+      PIMCO_ZK_HOST: ${EXPOSE_IP}:2181
+      PIMCO_KAFKA_HOST: ${EXPOSE_IP}:9092
+    network_mode: host
 
   standalone:
     container_name: pimco

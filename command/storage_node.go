@@ -5,8 +5,9 @@ import (
 	"dan/pimco/conf"
 	"dan/pimco/injector"
 	"dan/pimco/kafka"
-	"dan/pimco/prom"
+	_ "dan/pimco/prom"
 	"dan/pimco/server"
+	"dan/pimco/util"
 	"dan/pimco/zoo"
 	"flag"
 	"github.com/valyala/fasthttp"
@@ -18,9 +19,12 @@ func StorageNode(args []string) {
 	var cfg conf.Config = *conf.NewConfig()
 	var wg sync.WaitGroup
 	conf.Load(&cfg)
+
 	fs := flag.NewFlagSet("storagenode", flag.ExitOnError)
 	backendName := fs.String("backend", "leveldb", "Backend storage to use")
+	strPartitions := fs.String("partitions", util.PartitionsToStr(cfg.Server.ConsumePartitions), "Partitions to consume")
 	fs.Parse(args)
+	cfg.Server.ConsumePartitions = util.ParsePartitions(*strPartitions)
 
 	// here we have circular dependency OffsetStorage->NodeId->Backend->OffsetStorage
 	// OffsetStorage use nodeId to identify backend in external system (kafka)
@@ -42,7 +46,7 @@ func StorageNode(args []string) {
 	// strage node don't accept samples through http, so storage is nil
 	srv := server.NewServer(cfg.Server, nil, backend)
 	// serve metrics
-	prom.Setup(cfg.Metrics)
+	//prom.Setup(cfg.Metrics)
 
 	// register itself as reporter as soon as all partition consumers come close enough to HighWaterMark
 	// we must keep zk connection open, as registration is ephemeral node

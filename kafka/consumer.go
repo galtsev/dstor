@@ -26,6 +26,13 @@ func ConsumePartition(cfg conf.KafkaConfig, partition int32, offset int64, wg *s
 	Check(err)
 	finalOffset, err = client.GetOffset(cfg.Topic, partition, sarama.OffsetNewest)
 	Check(err)
+	if finalOffset == 0 {
+		done = true
+		if wg != nil {
+			wg.Done()
+		}
+		log.Printf("Consumer of partition %d start with zero HighWaterMark", partition)
+	}
 
 	consumer, err := sarama.NewConsumerFromClient(client)
 	Check(err)
