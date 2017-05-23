@@ -1,7 +1,7 @@
 package ldb
 
 import (
-	. "dan/pimco/base"
+	. "github.com/galtsev/dstor/base"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"strconv"

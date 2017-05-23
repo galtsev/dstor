@@ -1,9 +1,9 @@
 package command
 
 import (
-	. "dan/pimco/base"
-	"dan/pimco/conf"
 	"fmt"
+	. "github.com/galtsev/dstor/base"
+	"github.com/galtsev/dstor/conf"
 	"gopkg.in/yaml.v2"
 )
 

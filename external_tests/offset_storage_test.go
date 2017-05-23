@@ -1,9 +1,9 @@
 package external_tests
 
 import (
-	"dan/pimco/conf"
-	"dan/pimco/kafka"
-	"dan/pimco/util"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/kafka"
+	"github.com/galtsev/dstor/util"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"

@@ -1,9 +1,9 @@
 package zoo
 
 import (
-	. "dan/pimco/base"
-	"dan/pimco/util"
 	"encoding/json"
+	. "github.com/galtsev/dstor/base"
+	"github.com/galtsev/dstor/util"
 	"github.com/samuel/go-zookeeper/zk"
 	"log"
 	"math/rand"

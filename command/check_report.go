@@ -1,10 +1,10 @@
 package command
 
 import (
-	"dan/pimco/api"
-	"dan/pimco/conf"
 	"flag"
 	"fmt"
+	"github.com/galtsev/dstor/api"
+	"github.com/galtsev/dstor/conf"
 	"os"
 	"time"
 )

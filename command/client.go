@@ -1,12 +1,12 @@
 package command
 
 import (
-	"dan/pimco"
-	"dan/pimco/api"
-	"dan/pimco/conf"
-	"dan/pimco/model"
-	"dan/pimco/util"
 	"flag"
+	"github.com/galtsev/dstor"
+	"github.com/galtsev/dstor/api"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
+	"github.com/galtsev/dstor/util"
 	"sync"
 	"time"
 )

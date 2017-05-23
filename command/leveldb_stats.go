@@ -1,12 +1,12 @@
 package command
 
 import (
-	"dan/pimco/base"
-	"dan/pimco/conf"
-	"dan/pimco/ldb"
-	"dan/pimco/model"
-	"dan/pimco/serializer"
 	"fmt"
+	"github.com/galtsev/dstor/base"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/ldb"
+	"github.com/galtsev/dstor/model"
+	"github.com/galtsev/dstor/serializer"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"sort"

@@ -1,10 +1,10 @@
 package pimco
 
 import (
-	"dan/pimco/conf"
-	"dan/pimco/model"
 	"errors"
 	"fmt"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
 	"math"
 	"math/rand"
 )

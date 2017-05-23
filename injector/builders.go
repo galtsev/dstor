@@ -1,12 +1,12 @@
 package injector
 
 import (
-	"dan/pimco"
-	"dan/pimco/conf"
-	"dan/pimco/influx"
-	"dan/pimco/kafka"
-	"dan/pimco/ldb"
 	"fmt"
+	"github.com/galtsev/dstor"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/influx"
+	"github.com/galtsev/dstor/kafka"
+	"github.com/galtsev/dstor/ldb"
 	"os"
 )
 

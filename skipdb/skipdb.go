@@ -1,10 +1,10 @@
 package skipdb
 
 import (
-	"dan/pimco"
-	"dan/pimco/model"
 	"github.com/Workiva/go-datastructures/common"
 	"github.com/Workiva/go-datastructures/slice/skip"
+	"github.com/galtsev/dstor"
+	"github.com/galtsev/dstor/model"
 	"time"
 )
 

@@ -4,7 +4,7 @@ FROM golang:1.8-alpine
 EXPOSE 8787
 VOLUME /mnt/leveldb
 
-COPY . /go/src/dan/pimco
+COPY . /go/src/dstor
 COPY cmd/pimco.yaml /go
 
-RUN go install dan/pimco/cmd
+RUN go install dstor/cmd

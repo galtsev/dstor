@@ -1,7 +1,7 @@
 package pimco
 
 import (
-	"dan/pimco/model"
+	"github.com/galtsev/dstor/model"
 	"time"
 )
 

@@ -1,8 +1,8 @@
 package conf
 
 import (
-	. "dan/pimco/base"
 	"fmt"
+	. "github.com/galtsev/dstor/base"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"

@@ -1,7 +1,7 @@
 package util
 
 import (
-	. "dan/pimco/base"
+	. "github.com/galtsev/dstor/base"
 	"strconv"
 	"strings"
 )

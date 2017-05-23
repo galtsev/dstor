@@ -1,8 +1,8 @@
 package pimco
 
 import (
-	"dan/pimco/conf"
-	"dan/pimco/model"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

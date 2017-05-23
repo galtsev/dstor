@@ -1,7 +1,7 @@
 package prom
 
 import (
-	"dan/pimco/conf"
+	"github.com/galtsev/dstor/conf"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"

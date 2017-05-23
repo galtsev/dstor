@@ -1,12 +1,12 @@
 package kafka
 
 import (
-	"dan/pimco"
-	. "dan/pimco/base"
-	"dan/pimco/conf"
-	"dan/pimco/model"
-	"dan/pimco/serializer"
 	"github.com/Shopify/sarama"
+	"github.com/galtsev/dstor"
+	. "github.com/galtsev/dstor/base"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
+	"github.com/galtsev/dstor/serializer"
 )
 
 type Writer struct {

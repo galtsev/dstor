@@ -1,13 +1,13 @@
 package ldb
 
 import (
-	"dan/pimco"
-	. "dan/pimco/base"
-	"dan/pimco/conf"
-	"dan/pimco/model"
-	"dan/pimco/serializer"
 	"encoding/binary"
 	"fmt"
+	"github.com/galtsev/dstor"
+	. "github.com/galtsev/dstor/base"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
+	"github.com/galtsev/dstor/serializer"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"

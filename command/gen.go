@@ -1,12 +1,12 @@
 package command
 
 import (
-	"dan/pimco"
-	"dan/pimco/conf"
-	"dan/pimco/injector"
-	"dan/pimco/util"
 	"flag"
 	"fmt"
+	"github.com/galtsev/dstor"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/injector"
+	"github.com/galtsev/dstor/util"
 )
 
 func Gen(args []string) {

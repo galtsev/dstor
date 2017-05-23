@@ -1,8 +1,8 @@
 package phttp
 
 import (
-	"dan/pimco"
-	. "dan/pimco/base"
+	"github.com/galtsev/dstor"
+	. "github.com/galtsev/dstor/base"
 	"time"
 )
 

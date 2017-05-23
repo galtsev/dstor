@@ -1,11 +1,11 @@
 package command
 
 import (
-	"dan/pimco/conf"
-	"dan/pimco/kafka"
-	"dan/pimco/util"
 	"fmt"
 	"github.com/Shopify/sarama"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/kafka"
+	"github.com/galtsev/dstor/util"
 )
 
 func TopicStats(args []string) {

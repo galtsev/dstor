@@ -1,9 +1,9 @@
 package pimco
 
 import (
-	"dan/pimco/conf"
-	"dan/pimco/model"
-	"dan/pimco/prom"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
+	"github.com/galtsev/dstor/prom"
 	"sync"
 	"time"
 )

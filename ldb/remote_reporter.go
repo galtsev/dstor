@@ -1,9 +1,9 @@
 package ldb
 
 import (
-	"dan/pimco"
-	"dan/pimco/api"
-	"dan/pimco/conf"
+	"github.com/galtsev/dstor"
+	"github.com/galtsev/dstor/api"
+	"github.com/galtsev/dstor/conf"
 	"sync"
 	"time"
 )

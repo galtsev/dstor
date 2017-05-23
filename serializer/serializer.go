@@ -1,8 +1,8 @@
 package serializer
 
 import (
-	. "dan/pimco/base"
 	"fmt"
+	. "github.com/galtsev/dstor/base"
 	"github.com/mailru/easyjson"
 	"github.com/tinylib/msgp/msgp"
 )

@@ -1,14 +1,14 @@
 package api
 
 import (
-	"dan/pimco"
-	. "dan/pimco/base"
-	"dan/pimco/conf"
-	"dan/pimco/model"
-	"dan/pimco/phttp"
-	"dan/pimco/serializer"
 	"encoding/json"
 	"fmt"
+	"github.com/galtsev/dstor"
+	. "github.com/galtsev/dstor/base"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
+	"github.com/galtsev/dstor/phttp"
+	"github.com/galtsev/dstor/serializer"
 	"github.com/valyala/fasthttp"
 	"io/ioutil"
 	"net/http"

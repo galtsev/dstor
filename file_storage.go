@@ -2,10 +2,10 @@ package pimco
 
 import (
 	"bufio"
-	. "dan/pimco/base"
-	"dan/pimco/conf"
-	"dan/pimco/model"
-	"dan/pimco/serializer"
+	. "github.com/galtsev/dstor/base"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
+	"github.com/galtsev/dstor/serializer"
 	"io"
 	"os"
 	"sync"

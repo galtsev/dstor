@@ -1,9 +1,9 @@
 package kafka
 
 import (
-	"dan/pimco"
-	"dan/pimco/conf"
-	"dan/pimco/model"
+	"github.com/galtsev/dstor"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
 )
 
 type KafkaCluster struct {

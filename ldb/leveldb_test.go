@@ -1,10 +1,10 @@
 package ldb
 
 import (
-	"dan/pimco"
-	"dan/pimco/conf"
-	"dan/pimco/model"
 	"fmt"
+	"github.com/galtsev/dstor"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"os"

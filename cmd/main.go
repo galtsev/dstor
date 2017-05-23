@@ -1,9 +1,9 @@
 package main
 
 import (
-	"dan/pimco/command"
-	_ "dan/pimco/ldb"
 	"fmt"
+	"github.com/galtsev/dstor/command"
+	_ "github.com/galtsev/dstor/ldb"
 	"log"
 	"os"
 	"time"

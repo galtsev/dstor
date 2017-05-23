@@ -1,12 +1,12 @@
 package ldb
 
 import (
-	"dan/pimco"
-	. "dan/pimco/base"
-	"dan/pimco/conf"
-	"dan/pimco/model"
-	"dan/pimco/serializer"
-	"dan/pimco/util"
+	"github.com/galtsev/dstor"
+	. "github.com/galtsev/dstor/base"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/model"
+	"github.com/galtsev/dstor/serializer"
+	"github.com/galtsev/dstor/util"
 	"io/ioutil"
 	"os"
 	"path"

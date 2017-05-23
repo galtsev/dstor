@@ -1,13 +1,13 @@
 package command
 
 import (
-	. "dan/pimco/base"
-	"dan/pimco/conf"
-	"dan/pimco/injector"
-	"dan/pimco/ldb"
-	"dan/pimco/prom"
-	"dan/pimco/server"
-	"dan/pimco/zoo"
+	. "github.com/galtsev/dstor/base"
+	"github.com/galtsev/dstor/conf"
+	"github.com/galtsev/dstor/injector"
+	"github.com/galtsev/dstor/ldb"
+	"github.com/galtsev/dstor/prom"
+	"github.com/galtsev/dstor/server"
+	"github.com/galtsev/dstor/zoo"
 	"github.com/valyala/fasthttp"
 )
 

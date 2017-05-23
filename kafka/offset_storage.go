@@ -1,10 +1,10 @@
 package kafka
 
 import (
-	. "dan/pimco/base"
-	"dan/pimco/conf"
 	"fmt"
 	"github.com/Shopify/sarama"
+	. "github.com/galtsev/dstor/base"
+	"github.com/galtsev/dstor/conf"
 	"sync"
 )
 
