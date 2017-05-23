@@ -39,6 +39,8 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 	case "/save":
 		srv.handleWrite(ctx)
 		path = "write"
+	case "/batch":
+		srv.handleBatch(ctx)
 	case "/api":
 		srv.handleReport(ctx)
 		path = "report"
@@ -54,6 +56,24 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 
 func (srv *Server) handlePing(ctx *fasthttp.RequestCtx) {
 	ctx.SetBody([]byte("pong"))
+}
+
+func (srv *Server) handleBatch(ctx *fasthttp.RequestCtx) {
+	// we either accept writes through http or consume kafka, not both
+	if srv.storage == nil {
+		ctx.NotFound()
+		return
+	}
+	var samples model.Samples
+	err := srv.json.Unmarshal(ctx.PostBody(), &samples)
+	if err != nil {
+		ctx.Error(err.Error(), fasthttp.StatusBadRequest)
+		return
+	}
+	for _, sample := range samples {
+		srv.storage.AddSample(&sample, 0)
+	}
+	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }
 
 func (srv *Server) handleWrite(ctx *fasthttp.RequestCtx) {

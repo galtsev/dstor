@@ -26,7 +26,7 @@ type Client struct {
 
 func NewClient(cfg conf.ClientConfig) *Client {
 	client := Client{
-		writeURL:  fmt.Sprintf("http://%s/save", cfg.Host),
+		writeURL:  fmt.Sprintf("http://%s/batch", cfg.Host),
 		reportURL: fmt.Sprintf("http://%s/api", cfg.Host),
 		szr:       serializer.NewSerializer("easyjson"),
 	}
@@ -76,12 +76,10 @@ func (c *Client) Flush() {
 	resp := fasthttp.AcquireResponse()
 	req.Header.SetMethod("POST")
 	req.SetRequestURI(c.writeURL)
-	for _, sample := range c.batch {
-		req.SetBody(c.szr.Marshal(sample))
-		Check(fasthttp.Do(req, resp))
-		if resp.StatusCode() >= 300 {
-			panic(fmt.Errorf("Bad response: %d", resp.StatusCode()))
-		}
+	req.SetBody(c.szr.Marshal(model.Samples(c.batch)))
+	Check(fasthttp.Do(req, resp))
+	if resp.StatusCode() >= 300 {
+		panic(fmt.Errorf("Bad response: %d", resp.StatusCode()))
 	}
 	fasthttp.ReleaseRequest(req)
 	fasthttp.ReleaseResponse(resp)
