@@ -42,7 +42,7 @@ func Client(args []string) {
 			wg.Done()
 		}()
 	}
-	gen := pimco.NewGenerator(cfg.Gen)
+	gen := dstor.NewGenerator(cfg.Gen)
 	mediator := util.NewMediator(*rate*1000, time.Duration(50)*time.Millisecond)
 	progress := util.NewProgress(100000)
 	var proceed bool = true

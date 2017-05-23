@@ -1,4 +1,4 @@
-package pimco
+package dstor
 
 import (
 	"github.com/galtsev/dstor/conf"

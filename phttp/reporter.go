@@ -16,7 +16,7 @@ type ReportResponse struct {
 	Tag     string             `json:"tagName"`
 	Start   int64              `json:"start"`
 	End     int64              `json:"end"`
-	Samples []pimco.ReportLine `json:"samples"`
+	Samples []dstor.ReportLine `json:"samples"`
 }
 
 func (req ReportRequest) Period() (time.Time, time.Time) {

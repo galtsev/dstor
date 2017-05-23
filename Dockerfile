@@ -5,6 +5,6 @@ EXPOSE 8787
 VOLUME /mnt/leveldb
 
 COPY . /go/src/dstor
-COPY cmd/pimco.yaml /go
+COPY cmd/config.yaml /go
 
 RUN go install dstor/cmd

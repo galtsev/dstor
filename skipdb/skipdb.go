@@ -51,10 +51,10 @@ func (db *DB) ReportOne(tag string, ts int64) (*model.Sample, bool) {
 	}
 }
 
-func (db *DB) Report(tag string, start, end time.Time) []pimco.ReportLine {
+func (db *DB) Report(tag string, start, end time.Time) []dstor.ReportLine {
 	tsBegin, tsEnd := start.UnixNano(), end.UnixNano()
 	step := (tsEnd - tsBegin) / 100
-	var resp []pimco.ReportLine
+	var resp []dstor.ReportLine
 	var prevSample *model.Sample
 	for ts := tsBegin; ts < tsEnd; ts += step {
 		sample, ok := db.ReportOne(tag, ts)
@@ -63,7 +63,7 @@ func (db *DB) Report(tag string, start, end time.Time) []pimco.ReportLine {
 		} else {
 			prevSample = sample
 		}
-		resp = append(resp, *pimco.ReportLineFromSample(sample))
+		resp = append(resp, *dstor.ReportLineFromSample(sample))
 	}
 	return resp
 }

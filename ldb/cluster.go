@@ -22,7 +22,7 @@ type LeveldbCluster struct {
 }
 
 type ClusterContext interface {
-	pimco.OffsetStorage
+	dstor.OffsetStorage
 }
 
 type partitionContext struct {
@@ -39,7 +39,7 @@ func (ctx partitionContext) OnFlush(offset int64) {
 
 func NewCluster(cfg conf.LeveldbConfig, ctx ClusterContext) *LeveldbCluster {
 	server := LeveldbCluster{
-		partitioner: pimco.MakePartitioner(cfg.NumPartitions),
+		partitioner: dstor.MakePartitioner(cfg.NumPartitions),
 		tagIndex:    NewTagIndex(path.Join(cfg.Path, "tags")),
 		backends:    make([]*DB, cfg.NumPartitions),
 	}
@@ -76,10 +76,10 @@ func (srv *LeveldbCluster) Close() {
 
 func (srv *LeveldbCluster) AddSample(sample *model.Sample, offset int64) {
 	srv.backends[srv.partitioner(sample.Tag)].AddSample(sample, offset)
-	pimco.SetLatest(sample.TS)
+	dstor.SetLatest(sample.TS)
 }
 
-func (srv *LeveldbCluster) Report(tag string, start, stop time.Time) []pimco.ReportLine {
+func (srv *LeveldbCluster) Report(tag string, start, stop time.Time) []dstor.ReportLine {
 	return srv.backends[srv.partitioner(tag)].Report(tag, start, stop)
 }
 

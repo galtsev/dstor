@@ -15,16 +15,16 @@ type Writer struct {
 	topic     string
 	partition int32
 	szr       serializer.Serializer
-	writer    *pimco.BatchWriter
+	writer    *dstor.BatchWriter
 }
 
-func NewWriter(cfg conf.KafkaConfig, partition int32, ctx pimco.BatchContext) *Writer {
+func NewWriter(cfg conf.KafkaConfig, partition int32, ctx dstor.BatchContext) *Writer {
 	w := Writer{
 		topic:     cfg.Topic,
 		partition: partition,
 		szr:       serializer.NewSerializer(cfg.Serializer),
 	}
-	w.writer = pimco.NewWriter(&w, cfg.Batch, ctx)
+	w.writer = dstor.NewWriter(&w, cfg.Batch, ctx)
 	conf := sarama.NewConfig()
 	conf.Producer.Partitioner = sarama.NewManualPartitioner
 	conf.Producer.Return.Successes = true

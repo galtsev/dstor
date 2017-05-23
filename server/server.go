@@ -17,12 +17,12 @@ import (
 
 type Server struct {
 	cfg      conf.ServerConfig
-	storage  pimco.Storage
-	reporter pimco.Reporter
+	storage  dstor.Storage
+	reporter dstor.Reporter
 	json     serializer.Serializer
 }
 
-func NewServer(cfg conf.ServerConfig, storage pimco.Storage, reporter pimco.Reporter) *Server {
+func NewServer(cfg conf.ServerConfig, storage dstor.Storage, reporter dstor.Reporter) *Server {
 	server := Server{
 		cfg:      cfg,
 		json:     serializer.NewSerializer("easyjson"),

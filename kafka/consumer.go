@@ -65,7 +65,7 @@ func ConsumePartition(cfg conf.KafkaConfig, partition int32, offset int64, wg *s
 	return ch
 }
 
-func PartitionLoader(cfg conf.KafkaConfig, partition int32, offset int64, db pimco.Storage, wg *sync.WaitGroup) {
+func PartitionLoader(cfg conf.KafkaConfig, partition int32, offset int64, db dstor.Storage, wg *sync.WaitGroup) {
 	for ksample := range ConsumePartition(cfg, partition, offset, wg, false) {
 		db.AddSample(&ksample.Sample, ksample.Offset)
 	}

@@ -29,7 +29,7 @@ func New(servers []string) *Zoo {
 	Check(err)
 	zoo := &Zoo{
 		conn: conn,
-		root: "/pimco",
+		root: "/dstor",
 	}
 	return zoo
 }

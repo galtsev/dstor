@@ -15,8 +15,8 @@ import (
 
 type dbHarness struct {
 	cfg      conf.LeveldbConfig
-	openFn   func() pimco.Backend
-	db       pimco.Backend
+	openFn   func() dstor.Backend
+	db       dstor.Backend
 	t        *testing.T
 	flushCh  chan int64
 	tagIndex *TagIndex
@@ -60,7 +60,7 @@ func (ctx testContext) OnFlush(offset int64) {
 func newHarness(t *testing.T) *dbHarness {
 	hs := new(t)
 	hs.tagIndex = NewTagIndex(hs.cfg.Path)
-	hs.openFn = func() pimco.Backend {
+	hs.openFn = func() dstor.Backend {
 		ctx := testContext{
 			TagIndex: hs.tagIndex,
 			ch:       hs.flushCh,
@@ -83,7 +83,7 @@ func newCluster(t *testing.T) *dbHarness {
 	hs := new(t)
 	hs.cfg.NumPartitions = 2
 	hs.cfg.Partitions = []int32{0, 1}
-	hs.openFn = func() pimco.Backend {
+	hs.openFn = func() dstor.Backend {
 		return NewCluster(hs.cfg, clusterCtx{hs.flushCh})
 	}
 	hs.db = hs.openFn()
@@ -104,11 +104,11 @@ func (hs *dbHarness) reopenDB() {
 	hs.db = hs.openFn()
 }
 
-func (hs *dbHarness) runReport(tag string, start time.Time, step int) []pimco.ReportLine {
+func (hs *dbHarness) runReport(tag string, start time.Time, step int) []dstor.ReportLine {
 	return hs.db.Report(tag, start, start.Add(time.Duration(step*100)*time.Second))
 }
 
-func (hs *dbHarness) expectResultRows(rows []pimco.ReportLine, expected *model.Sample, actualIndex ...int) {
+func (hs *dbHarness) expectResultRows(rows []dstor.ReportLine, expected *model.Sample, actualIndex ...int) {
 	for _, idx := range actualIndex {
 		row := rows[idx]
 		for vid := range expected.Values {

@@ -14,13 +14,13 @@ import (
 type Influx struct {
 	conn      client.Client
 	database  string
-	writer    *pimco.BatchWriter
+	writer    *dstor.BatchWriter
 	bpConfig  client.BatchPointsConfig
 	batch     client.BatchPoints
 	partition int32
 }
 
-func New(cfg conf.InfluxConfig, ctx pimco.BatchContext) *Influx {
+func New(cfg conf.InfluxConfig, ctx dstor.BatchContext) *Influx {
 	w := Influx{
 		bpConfig: client.BatchPointsConfig{Database: cfg.Database},
 		database: cfg.Database,
@@ -28,7 +28,7 @@ func New(cfg conf.InfluxConfig, ctx pimco.BatchContext) *Influx {
 	conn, err := client.NewHTTPClient(client.HTTPConfig{Addr: cfg.URL})
 	Check(err)
 	w.conn = conn
-	w.writer = pimco.NewWriter(&w, cfg.Batch, ctx)
+	w.writer = dstor.NewWriter(&w, cfg.Batch, ctx)
 	return &w
 }
 
@@ -57,7 +57,7 @@ func (w *Influx) AddSample(sample *model.Sample, offset int64) {
 	w.writer.Write(sample, offset)
 }
 
-func (w *Influx) Report(tag string, start, stop time.Time) []pimco.ReportLine {
+func (w *Influx) Report(tag string, start, stop time.Time) []dstor.ReportLine {
 	stime, etime := start.UnixNano(), stop.UnixNano()
 	step := (etime - stime) / (10 * 1000 * 1000 * 1000)
 	ql := fmt.Sprintf(`select 
@@ -79,11 +79,11 @@ func (w *Influx) Report(tag string, start, stop time.Time) []pimco.ReportLine {
 	if resp.Error() != nil {
 		panic(resp.Error())
 	}
-	var res []pimco.ReportLine
+	var res []dstor.ReportLine
 	for _, row := range resp.Results[0].Series[0].Values {
 		ts, err := row[0].(json.Number).Int64()
 		Check(err)
-		line := pimco.ReportLine{
+		line := dstor.ReportLine{
 			TS: ts,
 		}
 		for i, v := range row[1:] {

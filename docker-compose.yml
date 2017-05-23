@@ -36,30 +36,30 @@ services:
 
   node0:
     container_name: node0
-    image: galtsev/pimco
+    image: galtsev/dstor
     command: cmd storage-node -partitions 0,1,2,3
     ports:
       - "8780:8787"
     environment:
-      PIMCO_ZK_HOST: ${EXPOSE_IP}:2181
-      PIMCO_KAFKA_HOST: ${EXPOSE_IP}:9092
-      PIMCO_ADVERTIZE_HOST: ${EXPOSE_IP}:8780
-      PIMCO_NUM_PARTITIONS: ${NUM_PARTITIONS}
+      DSTOR_ZK_HOST: ${EXPOSE_IP}:2181
+      DSTOR_KAFKA_HOST: ${EXPOSE_IP}:9092
+      DSTOR_ADVERTIZE_HOST: ${EXPOSE_IP}:8780
+      DSTOR_NUM_PARTITIONS: ${NUM_PARTITIONS}
     volumes:
       - /data/leveldb0:/mnt/leveldb
     network_mode: bridge
 
   node1:
     container_name: node1
-    image: galtsev/pimco
+    image: galtsev/dstor
     command: cmd storage-node -partitions 4,5,6,7
     ports:
       - "8781:8787"
     environment:
-      PIMCO_ZK_HOST: ${EXPOSE_IP}:2181
-      PIMCO_KAFKA_HOST: ${EXPOSE_IP}:9092
-      PIMCO_ADVERTIZE_HOST: ${EXPOSE_IP}:8781
-      PIMCO_NUM_PARTITIONS: ${NUM_PARTITIONS}
+      DSTOR_ZK_HOST: ${EXPOSE_IP}:2181
+      DSTOR_KAFKA_HOST: ${EXPOSE_IP}:9092
+      DSTOR_ADVERTIZE_HOST: ${EXPOSE_IP}:8781
+      DSTOR_NUM_PARTITIONS: ${NUM_PARTITIONS}
     volumes:
       - /data/leveldb1:/mnt/leveldb
     network_mode: bridge
@@ -67,17 +67,17 @@ services:
 
   proxy:
     container_name: proxy
-    image: galtsev/pimco
+    image: galtsev/dstor
     command: cmd proxy
     environment:
-      PIMCO_ZK_HOST: ${EXPOSE_IP}:2181
-      PIMCO_KAFKA_HOST: ${EXPOSE_IP}:9092
-      PIMCO_NUM_PARTITIONS: ${NUM_PARTITIONS}
+      DSTOR_ZK_HOST: ${EXPOSE_IP}:2181
+      DSTOR_KAFKA_HOST: ${EXPOSE_IP}:9092
+      DSTOR_NUM_PARTITIONS: ${NUM_PARTITIONS}
     network_mode: host
 
   standalone:
-    container_name: pimco
-    image: galtsev/pimco
+    container_name: dstor
+    image: galtsev/dstor
     command: cmd standalone
     ports:
       - "8787:8787"

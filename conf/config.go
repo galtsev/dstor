@@ -179,9 +179,9 @@ func NewConfig() *Config {
 }
 
 func Load(cfg *Config) {
-	var fileName string = os.Getenv("PIMCO_CONFIG")
+	var fileName string = os.Getenv("DSTOR_CONFIG")
 	if fileName == "" {
-		for _, fn := range []string{"pimco.yaml", "/etc/pimco.yaml"} {
+		for _, fn := range []string{"dstor.yaml", "/etc/dstor.yaml"} {
 			if _, err := os.Stat(fn); !os.IsNotExist(err) {
 				log.Printf("found %s", fn)
 				fileName = fn
@@ -195,19 +195,19 @@ func Load(cfg *Config) {
 	data, err := ioutil.ReadFile(fileName)
 	Check(err)
 	Check(yaml.Unmarshal(data, cfg))
-	zk_hosts := os.Getenv("PIMCO_ZK_HOST")
+	zk_hosts := os.Getenv("DSTOR_ZK_HOST")
 	if zk_hosts != "" {
 		cfg.Zookeeper.Servers = strings.Split(zk_hosts, ",")
 	}
-	kafka_hosts := os.Getenv("PIMCO_KAFKA_HOST")
+	kafka_hosts := os.Getenv("DSTOR_KAFKA_HOST")
 	if kafka_hosts != "" {
 		cfg.Kafka.Hosts = strings.Split(kafka_hosts, ",")
 	}
-	advertizeHost := os.Getenv("PIMCO_ADVERTIZE_HOST")
+	advertizeHost := os.Getenv("DSTOR_ADVERTIZE_HOST")
 	if advertizeHost != "" {
 		cfg.Server.AdvertizeHost = advertizeHost
 	}
-	numPartitions := os.Getenv("PIMCO_NUM_PARTITIONS")
+	numPartitions := os.Getenv("DSTOR_NUM_PARTITIONS")
 	if numPartitions != "" {
 		np, err := strconv.Atoi(numPartitions)
 		Check(err)

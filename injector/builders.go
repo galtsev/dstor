@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func MakeBackend(name string, cfg conf.Config, offsetStorage pimco.OffsetStorage) (backend pimco.Backend) {
+func MakeBackend(name string, cfg conf.Config, offsetStorage dstor.OffsetStorage) (backend dstor.Backend) {
 	switch name {
 	case "leveldb":
 		backend = ldb.NewCluster(cfg.Leveldb, offsetStorage)
@@ -22,24 +22,24 @@ func MakeBackend(name string, cfg conf.Config, offsetStorage pimco.OffsetStorage
 	return
 }
 
-func MakeStorage(name string, cfg conf.Config, offsetStorage pimco.OffsetStorage) (storage pimco.Storage) {
+func MakeStorage(name string, cfg conf.Config, offsetStorage dstor.OffsetStorage) (storage dstor.Storage) {
 	switch name {
 	case "kafka":
 		storage = kafka.NewCluster(cfg)
 	case "file":
-		storage = pimco.NewFileStorage(cfg)
+		storage = dstor.NewFileStorage(cfg)
 	default:
 		storage = MakeBackend(name, cfg, offsetStorage)
 	}
 	return
 }
 
-func MakeReporter(name string, cfg conf.Config) (reporter pimco.Reporter) {
+func MakeReporter(name string, cfg conf.Config) (reporter dstor.Reporter) {
 	return MakeBackend(name, cfg, nil)
 }
 
-func NodeId(storage pimco.Storage) string {
-	if id, ok := storage.(pimco.NodeId); ok {
+func NodeId(storage dstor.Storage) string {
+	if id, ok := storage.(dstor.NodeId); ok {
 		return id.NodeId()
 	} else {
 		nodeId := os.Getenv("PIMCO_NODE_ID")

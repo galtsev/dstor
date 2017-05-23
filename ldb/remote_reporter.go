@@ -21,7 +21,7 @@ type Reporter struct {
 
 func NewReporter(cfg conf.Config, registry Registry) *Reporter {
 	cluster := Reporter{
-		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
+		partitioner: dstor.MakePartitioner(cfg.Kafka.NumPartitions),
 		registry:    registry,
 		nodes:       make(map[string]*api.Client),
 	}
@@ -46,8 +46,8 @@ func (srv *Reporter) GetClient(partition int32) *api.Client {
 	return client
 }
 
-func (srv *Reporter) Report(tag string, start, stop time.Time) []pimco.ReportLine {
-	emptyReport := []pimco.ReportLine{}
+func (srv *Reporter) Report(tag string, start, stop time.Time) []dstor.ReportLine {
+	emptyReport := []dstor.ReportLine{}
 	client := srv.GetClient(srv.partitioner(tag))
 	if client == nil {
 		return emptyReport

@@ -13,10 +13,10 @@ type KafkaCluster struct {
 
 func NewCluster(cfg conf.Config) *KafkaCluster {
 	cluster := KafkaCluster{
-		partitioner: pimco.MakePartitioner(cfg.Kafka.NumPartitions),
+		partitioner: dstor.MakePartitioner(cfg.Kafka.NumPartitions),
 	}
 	for p := 0; p < cfg.Kafka.NumPartitions; p++ {
-		w := NewWriter(cfg.Kafka, int32(p), pimco.FakeContext{})
+		w := NewWriter(cfg.Kafka, int32(p), dstor.FakeContext{})
 		cluster.writers = append(cluster.writers, w)
 	}
 	return &cluster

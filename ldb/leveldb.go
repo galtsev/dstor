@@ -20,7 +20,7 @@ type DB struct {
 	db     *leveldb.DB
 	szr    serializer.Serializer
 	batch  leveldb.Batch
-	writer *pimco.BatchWriter
+	writer *dstor.BatchWriter
 	ctx    Context
 }
 
@@ -29,7 +29,7 @@ func (db *DB) GetDB() *leveldb.DB {
 }
 
 func nowFunc() time.Time {
-	return time.Unix(0, pimco.GetLatest()).Add(-time.Duration(24) * time.Hour)
+	return time.Unix(0, dstor.GetLatest()).Add(-time.Duration(24) * time.Hour)
 }
 
 type Context interface {
@@ -56,7 +56,7 @@ func Open(cfg conf.LeveldbConfig, partition int32, ctx Context) *DB {
 		szr: serializer.MsgPackSerializer{},
 		ctx: ctx,
 	}
-	db.writer = pimco.NewWriter(&db, cfg.Batch, ctx)
+	db.writer = dstor.NewWriter(&db, cfg.Batch, ctx)
 	return &db
 }
 
@@ -109,10 +109,10 @@ func (db *DB) ReportOne(tag string, ts int64) (*model.Sample, bool) {
 	return &sample, true
 }
 
-func (db *DB) Report(tag string, start, end time.Time) []pimco.ReportLine {
+func (db *DB) Report(tag string, start, end time.Time) []dstor.ReportLine {
 	tsBegin, tsEnd := start.UnixNano(), end.UnixNano()
 	step := (tsEnd - tsBegin) / 100
-	var resp []pimco.ReportLine
+	var resp []dstor.ReportLine
 	var prevSample *model.Sample = &model.Sample{}
 	for ts := tsBegin; ts < tsEnd; ts += step {
 		sample, ok := db.ReportOne(tag, ts+step)
@@ -121,7 +121,7 @@ func (db *DB) Report(tag string, start, end time.Time) []pimco.ReportLine {
 		}
 		sample.TS = ts
 		prevSample = sample
-		resp = append(resp, *pimco.ReportLineFromSample(sample))
+		resp = append(resp, *dstor.ReportLineFromSample(sample))
 	}
 	return resp
 }

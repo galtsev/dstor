@@ -17,13 +17,13 @@ func Gen(args []string) {
 	fs.Parse(args)
 	fmt.Println(cfg)
 	storage := injector.MakeStorage(cfg.Gen.Backend, cfg, nil)
-	gen := pimco.NewGenerator(cfg.Gen)
+	gen := dstor.NewGenerator(cfg.Gen)
 	progress := util.NewProgress(100000)
 
 	for gen.Next() {
 		sample := gen.Sample()
 		storage.AddSample(sample, 0)
-		pimco.SetLatest(sample.TS)
+		dstor.SetLatest(sample.TS)
 		progress.Step()
 	}
 	storage.Close()

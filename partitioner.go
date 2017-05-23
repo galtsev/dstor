@@ -1,4 +1,4 @@
-package pimco
+package dstor
 
 import (
 	"hash/fnv"

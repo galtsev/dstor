@@ -37,7 +37,7 @@ func timeToArg(t time.Time) string {
 	return strconv.Itoa(int(t.UnixNano()))
 }
 
-func (c *Client) Report(tag string, start, stop time.Time) []pimco.ReportLine {
+func (c *Client) Report(tag string, start, stop time.Time) []dstor.ReportLine {
 	args := url.Values{}
 	args.Set("tag", tag)
 	args.Set("start", timeToArg(start))
