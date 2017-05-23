@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -205,6 +206,13 @@ func Load(cfg *Config) {
 	advertizeHost := os.Getenv("PIMCO_ADVERTIZE_HOST")
 	if advertizeHost != "" {
 		cfg.Server.AdvertizeHost = advertizeHost
+	}
+	numPartitions := os.Getenv("PIMCO_NUM_PARTITIONS")
+	if numPartitions != "" {
+		np, err := strconv.Atoi(numPartitions)
+		Check(err)
+		cfg.Kafka.NumPartitions = np
+		cfg.Leveldb.NumPartitions = np
 	}
 
 }

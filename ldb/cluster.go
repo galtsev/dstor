@@ -41,6 +41,7 @@ func NewCluster(cfg conf.LeveldbConfig, ctx ClusterContext) *LeveldbCluster {
 	server := LeveldbCluster{
 		partitioner: pimco.MakePartitioner(cfg.NumPartitions),
 		tagIndex:    NewTagIndex(path.Join(cfg.Path, "tags")),
+		backends:    make([]*DB, cfg.NumPartitions),
 	}
 
 	// get nodeId, create if missing
@@ -61,7 +62,7 @@ func NewCluster(cfg conf.LeveldbConfig, ctx ClusterContext) *LeveldbCluster {
 			ctx:       ctx,
 		}
 		db := Open(cfg, p, pctx)
-		server.backends = append(server.backends, db)
+		server.backends[p] = db
 	}
 	return &server
 }

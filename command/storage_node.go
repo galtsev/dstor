@@ -25,6 +25,8 @@ func StorageNode(args []string) {
 	strPartitions := fs.String("partitions", util.PartitionsToStr(cfg.Server.ConsumePartitions), "Partitions to consume")
 	fs.Parse(args)
 	cfg.Server.ConsumePartitions = util.ParsePartitions(*strPartitions)
+	cfg.Leveldb.Partitions = cfg.Server.ConsumePartitions
+	log.Printf("conf. num_partitions:%d; consume_partitions:%v", cfg.Kafka.NumPartitions, cfg.Server.ConsumePartitions)
 
 	// here we have circular dependency OffsetStorage->NodeId->Backend->OffsetStorage
 	// OffsetStorage use nodeId to identify backend in external system (kafka)

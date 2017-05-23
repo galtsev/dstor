@@ -27,7 +27,7 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: ${EXPOSE_IP}
       KAFKA_ADVERTISED_PORT: 9092
       KAFKA_BROKER_ID: 911
-      KAFKA_CREATE_TOPICS: "test:4:1"
+      KAFKA_CREATE_TOPICS: "test:${NUM_PARTITIONS}:1"
       KAFKA_ZOOKEEPER_CONNECT: ${EXPOSE_IP}:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
     volumes:
@@ -44,6 +44,7 @@ services:
       PIMCO_ZK_HOST: ${EXPOSE_IP}:2181
       PIMCO_KAFKA_HOST: ${EXPOSE_IP}:9092
       PIMCO_ADVERTIZE_HOST: ${EXPOSE_IP}:8780
+      PIMCO_NUM_PARTITIONS: ${NUM_PARTITIONS}
     volumes:
       - /data/leveldb0:/mnt/leveldb
     network_mode: bridge
@@ -58,6 +59,7 @@ services:
       PIMCO_ZK_HOST: ${EXPOSE_IP}:2181
       PIMCO_KAFKA_HOST: ${EXPOSE_IP}:9092
       PIMCO_ADVERTIZE_HOST: ${EXPOSE_IP}:8781
+      PIMCO_NUM_PARTITIONS: ${NUM_PARTITIONS}
     volumes:
       - /data/leveldb1:/mnt/leveldb
     network_mode: bridge
@@ -70,6 +72,7 @@ services:
     environment:
       PIMCO_ZK_HOST: ${EXPOSE_IP}:2181
       PIMCO_KAFKA_HOST: ${EXPOSE_IP}:9092
+      PIMCO_NUM_PARTITIONS: ${NUM_PARTITIONS}
     network_mode: host
 
   standalone:
