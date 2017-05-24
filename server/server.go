@@ -92,17 +92,36 @@ func (srv *Server) handleWrite(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }
 
-func toInt64(data []byte) int64 {
-	v, err := strconv.ParseInt(string(data), 10, 64)
-	Check(err)
-	return v
+func toInt64(data []byte) (v int64, err error) {
+	v, err = strconv.ParseInt(string(data), 10, 64)
+	return v, err
 }
 
 func (srv *Server) handleReport(ctx *fasthttp.RequestCtx) {
 	args := ctx.QueryArgs()
 	log.Println(args)
-	start := toInt64(args.Peek("start"))
-	end := toInt64(args.Peek("end"))
+	if !args.Has("start") {
+		ctx.Error("start parameter missing", fasthttp.StatusBadRequest)
+		return
+	}
+	if !args.Has("end") {
+		ctx.Error("end parameter missing", fasthttp.StatusBadRequest)
+		return
+	}
+	if !args.Has("tag") {
+		ctx.Error("tag parameter missing", fasthttp.StatusBadRequest)
+		return
+	}
+	start, err := toInt64(args.Peek("start"))
+	if err != nil {
+		ctx.Error("bad value for start, expected int", fasthttp.StatusBadRequest)
+		return
+	}
+	end, err := toInt64(args.Peek("end"))
+	if err != nil {
+		ctx.Error("bad value for end, expected int", fasthttp.StatusBadRequest)
+		return
+	}
 	tag := string(args.Peek("tag"))
 	resp := phttp.ReportResponse{
 		Tag:   tag,
