@@ -10,25 +10,23 @@ This PoC implementation provide following functionality:
 
 There is two modes of operation: standalone and cluster.
 
-# Compillation
+# Installation
 
-Suppose that this source code checked out to directory `dstor`
+Suppose that you have go1.8 installed and GOPATH configured:
 
-To compile executable locally (go 1.8 required):
+    go get github.com/galtsev/dstor
+    go install github.com/galtsev/dstor/dstor
 
-    cd dstor/cmd
-    go build
-
-This produce single executable `cmd` which can operate in different modes, depending on first command-line argument (subcommand).
-For list of subcommands run `./cmd -help`. For command-line options of specific subcommand run `./cmd <subcommand> -help`.
+This produce single executable `dstor` which can operate in different modes, depending on first command-line argument (subcommand).
+For list of subcommands run `dstor -help`. For command-line options of specific subcommand run `dstor <subcommand> -help`.
 Executable expect `dstor.yaml` file exists in current working directory, which contain runtime configuration. Current configuration
-with all options can be retrieved with `./cmd show-config`.
+with all options can be retrieved with `dstor show-config`.
 
 # Standalone server
 
 Run it with:
 
-    ./cmd standalone [args]
+    dstor standalone [args]
 
 Standalone server have no other dependencies and good for evaluation. All accepted samples
 stored in local embedded leveldb instance.
@@ -38,9 +36,14 @@ stored in local embedded leveldb instance.
 3rd party requirements are Kafka and Zookeeper.
 
 Cluster consists of Proxy nodes and Storage nodes.
-Proxy node face client requests. It put writen samples to kafka and proxy report requests to appropriate Storage node.
-Storage node continuously consume kafka topic, store consumed samples in local leveldb instance and respond to
-report requests from Proxy nodes.
+
+- *Proxy* node face client requests. It put accepted samples to kafka and proxy report requests to appropriate Storage node.
+Proxy node is stateless and you can create as many proxy nodes as you need.
+- *Storage* node continuously consume kafka topic, store consumed samples in local leveldb instance and respond to
+report requests from Proxy nodes. Mapping between kafka partitions and storage nodes is manual (-partitions command-line parameter).
+You can map same partition to several storage nodes - this is the way to provide redundancy. It is safe to restart storage node
+or create additional storage nodes while cluster running. New/restarted storage node became available for report requests
+as soon as it consume the most recent records from corresponding kafka partitions.
 
 # Run cluster in Docker
 
@@ -52,4 +55,4 @@ See provided `docker-compose.yml` for details.
 
 # Test client
 
-The same executable can be used to generate write load. Adjust `gen` section of `cmd/dstor.yaml` and run `./cmd client`.
+The same executable can be used to generate write load. Adjust `gen` section of `dstor/dstor.yaml` and run `dstor client`.

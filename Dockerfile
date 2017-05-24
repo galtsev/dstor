@@ -5,6 +5,6 @@ EXPOSE 8787
 VOLUME /mnt/leveldb
 
 COPY . /go/src/github.com/galtsev/dstor
-COPY cmd/dstor.yaml /go
+COPY dstor/dstor.yaml /go
 
-RUN go install github.com/galtsev/dstor/cmd
+RUN go install github.com/galtsev/dstor/dstor

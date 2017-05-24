@@ -1,4 +1,4 @@
-cmd/cmd
+dstor/dstor
 scripts/
 .env
 *.sublime-project

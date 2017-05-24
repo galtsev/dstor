@@ -37,7 +37,7 @@ services:
   node0:
     container_name: node0
     image: galtsev/dstor
-    command: cmd storage-node -partitions 0,1,2,3
+    command: dstor storage-node -partitions 0,1,2,3
     ports:
       - "8780:8787"
     environment:
@@ -52,7 +52,7 @@ services:
   node1:
     container_name: node1
     image: galtsev/dstor
-    command: cmd storage-node -partitions 4,5,6,7
+    command: dstor storage-node -partitions 4,5,6,7
     ports:
       - "8781:8787"
     environment:
@@ -68,7 +68,7 @@ services:
   proxy:
     container_name: proxy
     image: galtsev/dstor
-    command: cmd proxy
+    command: dstor proxy
     environment:
       DSTOR_ZK_HOST: ${EXPOSE_IP}:2181
       DSTOR_KAFKA_HOST: ${EXPOSE_IP}:9092
@@ -78,7 +78,7 @@ services:
   standalone:
     container_name: dstor
     image: galtsev/dstor
-    command: cmd standalone
+    command: dstor standalone
     ports:
       - "8787:8787"
     volumes:
