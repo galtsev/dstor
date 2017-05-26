@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/galtsev/dstor"
 	. "github.com/galtsev/dstor/base"
@@ -10,10 +11,39 @@ import (
 	"github.com/galtsev/dstor/prom"
 	"github.com/galtsev/dstor/serializer"
 	"github.com/valyala/fasthttp"
+	"html/template"
 	"log"
 	"strconv"
 	"time"
 )
+
+var tplDemo = `<html>
+<style>
+table {
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid gray;
+    padding: 2px;
+}
+</style>
+<body>
+<table>
+<th>
+	<td>1</td>
+	<td>2</td>
+</th>
+{{range .Samples }}
+	<tr>
+		<td>{{ .TS }}</td>
+		{{range .Values }}<td>{{printf "%.1f" .}}</td>{{end}}
+	</tr>
+{{end}}
+</table>
+</body>
+</html>
+`
 
 type Server struct {
 	cfg      conf.ServerConfig
@@ -44,6 +74,8 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 	case "/api":
 		srv.handleReport(ctx)
 		path = "report"
+	case "/demo":
+		srv.handleDemo(ctx)
 	case "/ping":
 		srv.handlePing(ctx)
 	default:
@@ -52,6 +84,48 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 	if path != "" {
 		prom.RequestTime(path, time.Now().Sub(start))
 	}
+}
+
+func (srv *Server) handleDemo(ctx *fasthttp.RequestCtx) {
+	args := ctx.QueryArgs()
+	log.Println(args)
+	if !args.Has("start") {
+		ctx.Error("start parameter missing", fasthttp.StatusBadRequest)
+		return
+	}
+	if !args.Has("end") {
+		ctx.Error("end parameter missing", fasthttp.StatusBadRequest)
+		return
+	}
+	if !args.Has("tag") {
+		ctx.Error("tag parameter missing", fasthttp.StatusBadRequest)
+		return
+	}
+	start, err := toInt64(args.Peek("start"))
+	if err != nil {
+		ctx.Error("bad value for start, expected int", fasthttp.StatusBadRequest)
+		return
+	}
+	end, err := toInt64(args.Peek("end"))
+	if err != nil {
+		ctx.Error("bad value for end, expected int", fasthttp.StatusBadRequest)
+		return
+	}
+	tag := string(args.Peek("tag"))
+	resp := phttp.ReportResponse{
+		Tag:   tag,
+		Start: start,
+		End:   end,
+	}
+	startTime := time.Unix(0, start)
+	endTime := time.Unix(0, end)
+	resp.Samples = srv.reporter.Report(tag, startTime, endTime)
+	ctx.SetContentType("text/html")
+	tpl, err := template.New("report").Parse(tplDemo)
+	Check(err)
+	var buf bytes.Buffer
+	tpl.Execute(&buf, resp)
+	ctx.SetBody(buf.Bytes())
 }
 
 func (srv *Server) handlePing(ctx *fasthttp.RequestCtx) {

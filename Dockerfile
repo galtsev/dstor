@@ -1,5 +1,5 @@
-#FROM golang:1.8
-FROM golang:1.8-alpine
+FROM golang:1.8
+#FROM golang:1.8-alpine
 
 EXPOSE 8787
 VOLUME /mnt/leveldb
