@@ -16,10 +16,10 @@ kafka:
     batch_size: 200
     flush_delay: 50
 gen:
-  mode: "geom"
+  mode: "random"
   start: 2017-05-18 00:00
   end: 2017-05-19 00:00
-  count: 20000000
+  count: 200000000
   tags: 2000
   backend: kafka
 #leveldb-standalone

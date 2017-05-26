@@ -39,16 +39,20 @@ type BaseGenerator struct {
 
 type RandomGenerator struct {
 	BaseGenerator
-	ts int64
+	ts  int64
+	cnt int
 }
 
 func (g *RandomGenerator) Next() bool {
 	g.ts += g.step
+	g.cnt += 1
 	return g.ts < g.end
 }
 
 func (g *RandomGenerator) Sample() *model.Sample {
-	return MakeSample(g.ts, g.tags[rand.Intn(len(g.tags))])
+	s := MakeSample(g.ts, g.tags[rand.Intn(len(g.tags))])
+	s.Values[0] = float64(g.cnt)
+	return s
 }
 
 func NewGenerator(cfg conf.GenConfig) Generator {

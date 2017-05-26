@@ -119,7 +119,21 @@ func (srv *Server) handleDemo(ctx *fasthttp.RequestCtx) {
 	}
 	startTime := time.Unix(0, start)
 	endTime := time.Unix(0, end)
-	resp.Samples = srv.reporter.Report(tag, startTime, endTime)
+	samples := srv.reporter.Report(tag, startTime, endTime)
+
+	// put 0 to lines with same Values as in previous line
+	// to visually emphasize not yet generated period
+	var nsamples []dstor.ReportLine
+	for i, line := range samples {
+		nline := line
+		if i > 0 && line.Values[0] == samples[i-1].Values[0] {
+			for j := range line.Values {
+				nline.Values[j] = 0
+			}
+		}
+		nsamples = append(nsamples, nline)
+	}
+	resp.Samples = nsamples
 	ctx.SetContentType("text/html")
 	tpl, err := template.New("report").Parse(tplDemo)
 	Check(err)
