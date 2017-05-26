@@ -45,6 +45,18 @@ table, th, td {
 </html>
 `
 
+type ErrBadRequest string
+
+func (e ErrBadRequest) Error() string {
+	return string(e)
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 type Server struct {
 	cfg      conf.ServerConfig
 	storage  dstor.Storage
@@ -63,8 +75,22 @@ func NewServer(cfg conf.ServerConfig, storage dstor.Storage, reporter dstor.Repo
 }
 
 func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
+	defer func() {
+		if err := recover(); err != nil {
+			switch e := err.(type) {
+			case ErrBadRequest:
+				ctx.Error(e.Error(), fasthttp.StatusBadRequest)
+			case error:
+				ctx.Error(e.Error(), fasthttp.StatusInternalServerError)
+			default:
+				panic(err)
+			}
+
+		}
+	}()
 	start := time.Now()
 	var path string
+	var logged bool = true
 	switch string(ctx.Path()) {
 	case "/save":
 		srv.handleWrite(ctx)
@@ -78,48 +104,45 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 		srv.handleDemo(ctx)
 	case "/ping":
 		srv.handlePing(ctx)
+		logged = false
 	default:
 		ctx.NotFound()
+	}
+	if logged {
+		log.Print(ctx.URI().String())
 	}
 	if path != "" {
 		prom.RequestTime(path, time.Now().Sub(start))
 	}
 }
 
+func mustGetTimeArg(args *fasthttp.Args, name string) time.Time {
+	if !args.Has(name) {
+		panic(ErrBadRequest("Missing required argument: " + name))
+	}
+	v, err := strconv.ParseInt(string(args.Peek(name)), 10, 64)
+	check(err)
+	return time.Unix(0, v)
+}
+
+func mustGetStringArg(args *fasthttp.Args, name string) string {
+	if !args.Has(name) {
+		panic(ErrBadRequest("Missing required argument: " + name))
+	}
+	return string(args.Peek(name))
+}
+
 func (srv *Server) handleDemo(ctx *fasthttp.RequestCtx) {
 	args := ctx.QueryArgs()
-	log.Println(args)
-	if !args.Has("start") {
-		ctx.Error("start parameter missing", fasthttp.StatusBadRequest)
-		return
-	}
-	if !args.Has("end") {
-		ctx.Error("end parameter missing", fasthttp.StatusBadRequest)
-		return
-	}
-	if !args.Has("tag") {
-		ctx.Error("tag parameter missing", fasthttp.StatusBadRequest)
-		return
-	}
-	start, err := toInt64(args.Peek("start"))
-	if err != nil {
-		ctx.Error("bad value for start, expected int", fasthttp.StatusBadRequest)
-		return
-	}
-	end, err := toInt64(args.Peek("end"))
-	if err != nil {
-		ctx.Error("bad value for end, expected int", fasthttp.StatusBadRequest)
-		return
-	}
-	tag := string(args.Peek("tag"))
+	start := mustGetTimeArg(args, "start")
+	end := mustGetTimeArg(args, "end")
+	tag := mustGetStringArg(args, "tag")
 	resp := phttp.ReportResponse{
 		Tag:   tag,
-		Start: start,
-		End:   end,
+		Start: start.UnixNano(),
+		End:   end.UnixNano(),
 	}
-	startTime := time.Unix(0, start)
-	endTime := time.Unix(0, end)
-	samples := srv.reporter.Report(tag, startTime, endTime)
+	samples := srv.reporter.Report(tag, start, end)
 
 	// put 0 to lines with same Values as in previous line
 	// to visually emphasize not yet generated period
@@ -180,47 +203,19 @@ func (srv *Server) handleWrite(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }
 
-func toInt64(data []byte) (v int64, err error) {
-	v, err = strconv.ParseInt(string(data), 10, 64)
-	return v, err
-}
-
 func (srv *Server) handleReport(ctx *fasthttp.RequestCtx) {
 	args := ctx.QueryArgs()
-	log.Println(args)
-	if !args.Has("start") {
-		ctx.Error("start parameter missing", fasthttp.StatusBadRequest)
-		return
-	}
-	if !args.Has("end") {
-		ctx.Error("end parameter missing", fasthttp.StatusBadRequest)
-		return
-	}
-	if !args.Has("tag") {
-		ctx.Error("tag parameter missing", fasthttp.StatusBadRequest)
-		return
-	}
-	start, err := toInt64(args.Peek("start"))
-	if err != nil {
-		ctx.Error("bad value for start, expected int", fasthttp.StatusBadRequest)
-		return
-	}
-	end, err := toInt64(args.Peek("end"))
-	if err != nil {
-		ctx.Error("bad value for end, expected int", fasthttp.StatusBadRequest)
-		return
-	}
-	tag := string(args.Peek("tag"))
+	start := mustGetTimeArg(args, "start")
+	end := mustGetTimeArg(args, "end")
+	tag := mustGetStringArg(args, "tag")
 	resp := phttp.ReportResponse{
 		Tag:   tag,
-		Start: start,
-		End:   end,
+		Start: start.UnixNano(),
+		End:   end.UnixNano(),
 	}
-	startTime := time.Unix(0, start)
-	endTime := time.Unix(0, end)
-	resp.Samples = srv.reporter.Report(tag, startTime, endTime)
+	resp.Samples = srv.reporter.Report(tag, start, end)
 	body, err := json.Marshal(resp)
-	Check(err)
+	check(err)
 	ctx.SetBody(body)
 	ctx.SetContentType("application/json")
 }

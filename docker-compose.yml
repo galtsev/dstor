@@ -86,12 +86,11 @@ services:
     network_mode: host
 
   dev:
-    container_name: dstor
+    container_name: dev
     image: dstor:latest
-    command: dstor standalone
+    command: /go/bin/dstor standalone
     ports:
       - "8787:8787"
     volumes:
-      - /data/leveldb:/mnt/leveldb
-      - /code/go/src/github.com/galtsev/dstor/dstor:/go/bin
+      - /home/dan/go/src/github.com/galtsev/dstor/dstor:/go/bin
     network_mode: host
