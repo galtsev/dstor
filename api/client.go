@@ -19,8 +19,7 @@ import (
 )
 
 type Client struct {
-	client    *fasthttp.PipelineClient
-	batch     []model.Sample
+	cfg       conf.ClientConfig
 	writeURL  string
 	reportURL string
 	szr       serializer.Serializer
@@ -30,7 +29,7 @@ type Client struct {
 
 func NewClient(cfg conf.ClientConfig) *Client {
 	client := Client{
-		client:    &fasthttp.PipelineClient{Addr: cfg.Host},
+		cfg:       cfg,
 		writeURL:  fmt.Sprintf("http://%s/batch", cfg.Host),
 		reportURL: fmt.Sprintf("http://%s/api", cfg.Host),
 		szr:       serializer.NewSerializer("easyjson"),
@@ -43,7 +42,7 @@ func NewClient(cfg conf.ClientConfig) *Client {
 	return &client
 }
 
-func (c *Client) sendBatch(samples []model.Sample) {
+func (c *Client) sendBatch(samples []model.Sample, client *fasthttp.Client) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 	resp := fasthttp.AcquireResponse()
@@ -51,7 +50,7 @@ func (c *Client) sendBatch(samples []model.Sample) {
 	req.Header.SetMethod("POST")
 	req.SetRequestURI(c.writeURL)
 	req.SetBody(c.szr.Marshal(model.Samples(samples)))
-	Check(c.client.Do(req, resp))
+	Check(client.Do(req, resp))
 	if resp.StatusCode() >= 300 {
 		panic(fmt.Errorf("Bad response: %d", resp.StatusCode()))
 	}
@@ -59,6 +58,7 @@ func (c *Client) sendBatch(samples []model.Sample) {
 }
 
 func (c *Client) sendLoop() {
+	client := &fasthttp.Client{}
 	var samples []model.Sample
 	for sample := range c.ch {
 		samples = append(samples, sample)
@@ -70,11 +70,11 @@ func (c *Client) sendLoop() {
 			default:
 				more = false
 			}
-			if len(samples) > 500 {
+			if len(samples) >= 200 {
 				more = false
 			}
 		}
-		c.sendBatch(samples)
+		c.sendBatch(samples, client)
 		samples = samples[:0]
 	}
 	c.wg.Done()
