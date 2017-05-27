@@ -52,7 +52,7 @@ services:
   node1:
     container_name: node1
     image: galtsev/dstor
-    command: dstor storage-node -partitions 4,5,6,7
+    command: dstor storage-node -partitions 0,1,2,3
     ports:
       - "8781:8787"
     environment:
