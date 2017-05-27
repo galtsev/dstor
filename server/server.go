@@ -90,7 +90,7 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 	}()
 	start := time.Now()
 	var path string
-	var logged bool = true
+	var logged bool = false
 	switch string(ctx.Path()) {
 	case "/save":
 		srv.handleWrite(ctx)
@@ -100,11 +100,12 @@ func (srv *Server) Route(ctx *fasthttp.RequestCtx) {
 	case "/api":
 		srv.handleReport(ctx)
 		path = "report"
+		logged = true
 	case "/demo":
 		srv.handleDemo(ctx)
+		logged = true
 	case "/ping":
 		srv.handlePing(ctx)
-		logged = false
 	default:
 		ctx.NotFound()
 	}

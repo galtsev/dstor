@@ -14,23 +14,70 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 )
 
 type Client struct {
+	client    *fasthttp.PipelineClient
 	batch     []model.Sample
 	writeURL  string
 	reportURL string
 	szr       serializer.Serializer
+	ch        chan model.Sample
+	wg        sync.WaitGroup
 }
 
 func NewClient(cfg conf.ClientConfig) *Client {
 	client := Client{
+		client:    &fasthttp.PipelineClient{Addr: cfg.Host},
 		writeURL:  fmt.Sprintf("http://%s/batch", cfg.Host),
 		reportURL: fmt.Sprintf("http://%s/api", cfg.Host),
 		szr:       serializer.NewSerializer("easyjson"),
+		ch:        make(chan model.Sample, 1000),
+	}
+	for i := 0; i < cfg.Concurrency; i++ {
+		client.wg.Add(1)
+		go client.sendLoop()
 	}
 	return &client
+}
+
+func (c *Client) sendBatch(samples []model.Sample) {
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+	req.Header.SetMethod("POST")
+	req.SetRequestURI(c.writeURL)
+	req.SetBody(c.szr.Marshal(model.Samples(samples)))
+	Check(c.client.Do(req, resp))
+	if resp.StatusCode() >= 300 {
+		panic(fmt.Errorf("Bad response: %d", resp.StatusCode()))
+	}
+
+}
+
+func (c *Client) sendLoop() {
+	var samples []model.Sample
+	for sample := range c.ch {
+		samples = append(samples, sample)
+		more := true
+		for more {
+			select {
+			case s := <-c.ch:
+				samples = append(samples, s)
+			default:
+				more = false
+			}
+			if len(samples) > 500 {
+				more = false
+			}
+		}
+		c.sendBatch(samples)
+		samples = samples[:0]
+	}
+	c.wg.Done()
 }
 
 func timeToArg(t time.Time) string {
@@ -64,28 +111,10 @@ func (c *Client) Report(tag string, start, stop time.Time) []dstor.ReportLine {
 	return respData.Samples
 }
 
-func (c *Client) Add(sample *model.Sample) {
-	c.batch = append(c.batch, *sample)
-}
-
-func (c *Client) Flush() {
-	if len(c.batch) == 0 {
-		return
-	}
-	req := fasthttp.AcquireRequest()
-	resp := fasthttp.AcquireResponse()
-	req.Header.SetMethod("POST")
-	req.SetRequestURI(c.writeURL)
-	req.SetBody(c.szr.Marshal(model.Samples(c.batch)))
-	Check(fasthttp.Do(req, resp))
-	if resp.StatusCode() >= 300 {
-		panic(fmt.Errorf("Bad response: %d", resp.StatusCode()))
-	}
-	fasthttp.ReleaseRequest(req)
-	fasthttp.ReleaseResponse(resp)
-	c.batch = c.batch[:0]
+func (c *Client) AddSample(sample *model.Sample) {
+	c.ch <- *sample
 }
 
 func (c *Client) Close() {
-	c.Flush()
+	c.wg.Wait()
 }

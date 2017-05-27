@@ -44,7 +44,7 @@ server:
 #   reporter: reporter
 
 client:
-  batch_size: 10
+  batch_size: 100
 leveldb:
   # path: /mnt/leveldb
   num_partitions: 4

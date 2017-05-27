@@ -79,10 +79,6 @@ services:
     container_name: dstor
     image: galtsev/dstor
     command: dstor standalone
-    ports:
-      - "8787:8787"
-    volumes:
-      - /data/leveldb:/mnt/leveldb
     network_mode: host
 
   dev:

@@ -52,8 +52,9 @@ func (cfg GenConfig) Period() (start, end time.Time) {
 }
 
 type ClientConfig struct {
-	Host      string
-	BatchSize int `yaml:"batch_size"`
+	Host        string
+	BatchSize   int `yaml:"batch_size"`
+	Concurrency int `yaml:"concurrency`
 }
 
 type ServerConfig struct {
@@ -156,8 +157,9 @@ func NewConfig() *Config {
 			EnableSum:  false,
 		},
 		Client: ClientConfig{
-			Host:      "localhost:8787",
-			BatchSize: 10,
+			Host:        "localhost:8787",
+			BatchSize:   10,
+			Concurrency: 20,
 		},
 		Leveldb: LeveldbConfig{
 			Path: "/mnt/leveldb",
