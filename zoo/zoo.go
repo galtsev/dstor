@@ -61,23 +61,24 @@ func (z *Zoo) WatchReporters() {
 	}
 }
 
-func (z *Zoo) ensurePath(root string) {
+func (z *Zoo) EnsurePath(path string) {
+	root := z.root + path
 	parts := strings.Split(strings.Trim(root, "/"), "/")
 	log.Println("parts", parts)
-	path := ""
+	cpath := ""
 	acl := zk.WorldACL(zk.PermAll)
 	for _, part := range parts {
-		path = path + "/" + part
-		if ok, _, _ := z.conn.Exists(path); !ok {
-			log.Printf("creating missing zk path %s", path)
-			z.conn.Create(path, []byte{}, 0, acl)
+		cpath = cpath + "/" + part
+		if ok, _, _ := z.conn.Exists(cpath); !ok {
+			log.Printf("creating missing zk path %s", cpath)
+			z.conn.Create(cpath, []byte{}, 0, acl)
 		}
 	}
 }
 
 func (z *Zoo) Register(host string, partitions []int32) {
 	base := z.root + "/reporters"
-	z.ensurePath(base)
+	z.EnsurePath("/reporters")
 	acl := zk.WorldACL(zk.PermAll)
 	rec := ReporterRec{
 		Addr:       host,

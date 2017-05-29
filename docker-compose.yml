@@ -30,6 +30,8 @@ services:
       KAFKA_CREATE_TOPICS: "test:${NUM_PARTITIONS}:1"
       KAFKA_ZOOKEEPER_CONNECT: ${EXPOSE_IP}:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
+    extra_hosts:
+      - "rathole:192.168.0.2"
     volumes:
       - /data/kafka:/kafka
     network_mode: host

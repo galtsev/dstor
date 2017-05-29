@@ -116,5 +116,6 @@ func (c *Client) AddSample(sample *model.Sample) {
 }
 
 func (c *Client) Close() {
+	close(c.ch)
 	c.wg.Wait()
 }
