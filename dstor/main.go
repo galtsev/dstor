@@ -52,6 +52,10 @@ func main() {
 		timeIt(func() {
 			command.Client(args)
 		})
+	case "loader":
+		timeIt(func() {
+			command.Loader(args)
+		})
 	case "gen":
 		timeIt(func() {
 			command.Gen(args)

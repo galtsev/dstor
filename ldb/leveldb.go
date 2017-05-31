@@ -93,15 +93,15 @@ func (db *DB) KeyTime(key []byte) int64 {
 	return int64(BigEndian.Uint64(key[4:]))
 }
 
-func (db *DB) ReportOne(tag string, ts int64) (*model.Sample, bool) {
+func (db *DB) ReportOne(tag string, start, end int64) (*model.Sample, bool) {
 	var sample model.Sample
 	tagIdx, ok := db.ctx.Get(tag)
 	if !ok {
 		return nil, false
 	}
-	start := db.MakeKey(tagIdx, int64(0))
-	limit := db.MakeKey(tagIdx, ts)
-	iter := db.db.NewIterator(&util.Range{Start: start, Limit: limit}, nil)
+	startKey := db.MakeKey(tagIdx, start)
+	limitKey := db.MakeKey(tagIdx, end)
+	iter := db.db.NewIterator(&util.Range{Start: startKey, Limit: limitKey}, nil)
 	if !iter.Last() {
 		return nil, false
 	}
@@ -115,7 +115,7 @@ func (db *DB) Report(tag string, start, end time.Time) []dstor.ReportLine {
 	var resp []dstor.ReportLine
 	var prevSample *model.Sample = &model.Sample{}
 	for ts := tsBegin; ts < tsEnd; ts += step {
-		sample, ok := db.ReportOne(tag, ts+step)
+		sample, ok := db.ReportOne(tag, ts, ts+step)
 		if !ok {
 			sample = prevSample
 		}
