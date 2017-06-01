@@ -74,6 +74,7 @@ func Loader(args []string) {
 			for i := 0; i < n; i++ {
 				if gen.Next() {
 					ch <- *gen.Sample()
+					progress.Step()
 				} else {
 					proceed = false
 					break
