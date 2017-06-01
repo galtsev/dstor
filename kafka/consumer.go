@@ -9,11 +9,27 @@ import (
 	"github.com/galtsev/dstor/serializer"
 	"log"
 	"sync"
+	"time"
 )
+
+var loggerResolution time.Duration = time.Duration(30) * time.Second
 
 type KafkaSample struct {
 	Sample model.Sample
 	Offset int64
+}
+
+type OffsetLogger struct {
+	lastReport time.Time
+	partition  int32
+}
+
+func (ol *OffsetLogger) Log(producerOffset, consumerOffset int64) {
+	now := time.Now()
+	if now.Sub(ol.lastReport) > loggerResolution {
+		log.Printf("partition: %d; producer offset: %d; consumer offset: %d", ol.partition, producerOffset, consumerOffset)
+		ol.lastReport = now
+	}
 }
 
 func ConsumePartition(cfg conf.KafkaConfig, partition int32, offset int64, wg *sync.WaitGroup, oneShot bool) chan KafkaSample {
@@ -33,7 +49,6 @@ func ConsumePartition(cfg conf.KafkaConfig, partition int32, offset int64, wg *s
 		}
 		log.Printf("Consumer of partition %d start with zero HighWaterMark", partition)
 	}
-
 	consumer, err := sarama.NewConsumerFromClient(client)
 	Check(err)
 	partitionConsumer, err := consumer.ConsumePartition(cfg.Topic, partition, offset)
@@ -44,12 +59,14 @@ func ConsumePartition(cfg conf.KafkaConfig, partition int32, offset int64, wg *s
 		defer client.Close()
 		defer consumer.Close()
 		defer partitionConsumer.Close()
+		offsetLogger := OffsetLogger{partition: partition}
 		for msg := range partitionConsumer.Messages() {
 			var samples model.Samples
 			szr.Unmarshal(msg.Value, &samples)
 			for _, sample := range samples {
 				ch <- KafkaSample{Sample: sample, Offset: msg.Offset}
 			}
+			offsetLogger.Log(partitionConsumer.HighWaterMarkOffset(), msg.Offset)
 			if wg != nil && !done && msg.Offset+cfg.DoneOffset >= partitionConsumer.HighWaterMarkOffset() {
 				wg.Done()
 				done = true

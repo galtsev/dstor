@@ -3,9 +3,11 @@ package command
 import (
 	"fmt"
 	"github.com/galtsev/dstor"
+	"github.com/galtsev/dstor/api"
 	. "github.com/galtsev/dstor/base"
 	"github.com/galtsev/dstor/serializer"
 	"github.com/galtsev/dstor/util"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -38,6 +40,51 @@ func sendLoop(client HTTPClient, url string, ch chan model.Sample, wg *sync.Wait
 	}
 }
 
+type Stats struct {
+	lock sync.Mutex
+	b10  int
+	b20  int
+	b50  int
+	b100 int
+	bAll int
+}
+
+var (
+	d10  = time.Duration(10) * time.Millisecond
+	d20  = time.Duration(10) * time.Millisecond
+	d50  = time.Duration(50) * time.Millisecond
+	d100 = time.Duration(100) * time.Millisecond
+)
+
+func (s *Stats) Update(d time.Duration) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if d < d10 {
+		s.b10++
+	} else if d < d20 {
+		s.b20++
+	} else if d < d50 {
+		s.b50++
+	} else if d < d100 {
+		s.b100++
+	} else {
+		s.bAll++
+	}
+}
+
+func (s *Stats) String() string {
+	return fmt.Sprintf("{10:%d; 20:%d; 50:%d; 100:%d; >100: %d}", s.b10, s.b20, s.b50, s.b100, s.bAll)
+}
+
+func reportLoop(client *api.Client, start, end time.Time, stats *Stats, ch chan string, wg *sync.WaitGroup) {
+	for tag := range ch {
+		startTime := time.Now()
+		_ = client.Report(tag, start, end)
+		stats.Update(time.Now().Sub(startTime))
+	}
+	wg.Done()
+}
+
 func Loader(args []string) {
 	cfg := conf.NewConfig()
 	conf.Load(cfg)
@@ -47,6 +94,7 @@ func Loader(args []string) {
 	rate := fs.Int("rate", 0, "rate limit")
 	fs.StringVar(&cfg.Client.Host, "host", "localhost:8787", "server host:port")
 	fs.IntVar(&cfg.Gen.Count, "n", cfg.Gen.Count, "Num samples")
+	reportStart := fs.String("report.start", "", "report start date")
 	fs.Parse(args)
 
 	gen := dstor.NewGenerator(cfg.Gen)
@@ -54,6 +102,8 @@ func Loader(args []string) {
 	url := fmt.Sprintf("http://%s/save", cfg.Client.Host)
 	ch := make(chan model.Sample, 1000)
 	var wg sync.WaitGroup
+
+	// starting actual loaders
 	for cn := 0; cn < *clients; cn++ {
 		client := &fasthttp.PipelineClient{Addr: cfg.Client.Host}
 		wg.Add(*concurrency)
@@ -61,6 +111,43 @@ func Loader(args []string) {
 			go sendLoop(client, url, ch, &wg)
 		}
 	}
+
+	// starting reporters if requested
+	var stats Stats
+	reportCh := make(chan string, 10)
+	finishCh := make(chan struct{})
+	if *reportStart != "" {
+		start, err := time.Parse(DATE_FORMAT, *reportStart)
+		Check(err)
+		end := start.Add(time.Duration(24) * time.Hour)
+		nreporters := 10
+		client := api.NewClient(cfg.Client)
+		wg.Add(nreporters)
+		for i := 0; i < nreporters; i++ {
+			go reportLoop(client, start, end, &stats, reportCh, &wg)
+		}
+		// report scheduler
+		var tags []string
+		for i := 0; i < cfg.Gen.Tags; i++ {
+			tags = append(tags, fmt.Sprintf("tag%d", i))
+		}
+		go func() {
+			ticker := time.Tick(time.Second)
+			for {
+				select {
+				case <-finishCh:
+					close(reportCh)
+					return
+				case <-ticker:
+					for i := 0; i < nreporters; i++ {
+						reportCh <- tags[rand.Intn(len(tags))]
+					}
+
+				}
+			}
+		}()
+	}
+
 	if *rate == 0 {
 		for gen.Next() {
 			ch <- *gen.Sample()
@@ -82,6 +169,8 @@ func Loader(args []string) {
 			}
 		}
 	}
+	close(finishCh)
 	close(ch)
 	wg.Wait()
+	fmt.Println(&stats)
 }

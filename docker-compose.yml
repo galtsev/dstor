@@ -31,9 +31,9 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: ${EXPOSE_IP}:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
     extra_hosts:
-      - "rathole:192.168.0.2"
-    volumes:
-      - /data/kafka:/kafka
+      - "gog:${EXPOSE_IP}"
+    # volumes:
+    #   - /data/kafka:/kafka
     network_mode: host
 
   node0:
@@ -47,8 +47,8 @@ services:
       DSTOR_KAFKA_HOST: ${EXPOSE_IP}:9092
       DSTOR_ADVERTIZE_HOST: ${EXPOSE_IP}:8780
       DSTOR_NUM_PARTITIONS: ${NUM_PARTITIONS}
-    volumes:
-      - /data/leveldb0:/mnt/leveldb
+    # volumes:
+    #   - /data/leveldb0:/mnt/leveldb
     network_mode: bridge
 
   node1:
