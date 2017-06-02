@@ -13,9 +13,9 @@ func Gen(args []string) {
 	cfg := *conf.NewConfig()
 	conf.Load(&cfg)
 	fs := flag.NewFlagSet("gen", flag.ExitOnError)
-	fs.StringVar(&cfg.Gen.Backend, "backend", cfg.Gen.Backend, "backend")
-	fs.Parse(args)
+	conf.Parse(&cfg, args, fs, "gen")
 	fmt.Println(cfg)
+
 	storage := injector.MakeStorage(cfg.Gen.Backend, cfg, nil)
 	gen := dstor.NewGenerator(cfg.Gen)
 	progress := util.NewProgress(100000)

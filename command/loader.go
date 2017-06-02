@@ -89,13 +89,14 @@ func Loader(args []string) {
 	cfg := conf.NewConfig()
 	conf.Load(cfg)
 	fs := flag.NewFlagSet("loader", flag.ExitOnError)
-	concurrency := fs.Int("c", 4, "Concurrency")
+	concurrency := fs.Int("c", 4, "per client goroutines")
 	clients := fs.Int("t", 4, "clients")
 	rate := fs.Int("rate", 0, "rate limit")
 	fs.StringVar(&cfg.Client.Host, "host", "localhost:8787", "server host:port")
-	fs.IntVar(&cfg.Gen.Count, "n", cfg.Gen.Count, "Num samples")
-	reportStart := fs.String("report.start", "", "report start date")
-	fs.Parse(args)
+	reportStart := fs.String("report.start", "", "report start date YYYY-mm-dd HH:MM")
+	reportDuration := fs.Duration("report.duration", time.Duration(24)*time.Hour, "report duration <int>{h|m|s}")
+
+	conf.Parse(cfg, args, fs, "gen")
 
 	gen := dstor.NewGenerator(cfg.Gen)
 	progress := util.NewProgress(100000)
@@ -119,7 +120,7 @@ func Loader(args []string) {
 	if *reportStart != "" {
 		start, err := time.Parse(DATE_FORMAT, *reportStart)
 		Check(err)
-		end := start.Add(time.Duration(24) * time.Hour)
+		end := start.Add(*reportDuration)
 		nreporters := 10
 		client := api.NewClient(cfg.Client)
 		wg.Add(nreporters)

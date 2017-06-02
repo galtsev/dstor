@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"flag"
 	"fmt"
 	. "github.com/galtsev/dstor/base"
 	"gopkg.in/yaml.v2"
@@ -217,4 +218,31 @@ func Load(cfg *Config) {
 		cfg.Leveldb.NumPartitions = np
 	}
 
+}
+
+func Parse(cfg *Config, args []string, fs *flag.FlagSet, with ...string) {
+	var genDuration time.Duration
+	var genStart string
+	var withGen bool
+	for _, ff := range with {
+		switch ff {
+		case "gen":
+			fs.IntVar(&cfg.Gen.Count, "gen.count", cfg.Gen.Count, "Num samples")
+			fs.StringVar(&genStart, "gen.start", "", "Generation period start date YYYY-mm-dd HH:MM")
+			fs.DurationVar(&genDuration, "gen.duration", time.Duration(24)*time.Hour, "Generation period duration <int>{h|m|s}")
+			fs.IntVar(&cfg.Gen.Tags, "gen.tags", cfg.Gen.Tags, "Number of tags to generate")
+			fs.StringVar(&cfg.Gen.Backend, "backend", cfg.Gen.Backend, "backend")
+			withGen = true
+		}
+
+	}
+	fs.Parse(args)
+	if withGen {
+		if genStart != "" {
+			dt, err := time.Parse(DATE_FORMAT, genStart)
+			Check(err)
+			cfg.Gen.Start = genStart
+			cfg.Gen.End = dt.Add(genDuration).Format(DATE_FORMAT)
+		}
+	}
 }
